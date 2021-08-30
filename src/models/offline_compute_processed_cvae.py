@@ -22,8 +22,8 @@ import tensorflow_probability as tfp
 
 import optuna
 
-from utils import *
-from networks_tf import *
+from networks_offline import *
+from src.utils import *
 
 
 
@@ -187,8 +187,8 @@ np.random.shuffle(test_images)
 
 for it in range(5):
 
-    model = CVAE(latent_dim, batch_size, kernel_height, kernel_width, dropout)
-    #model = CVAE(latent_dim, kernel_height, kernel_width, dropout)
+    model = VAE_Interim_Big(latent_dim, batch_size, kernel_height, kernel_width, dropout)
+    #model = VAE_Interim_Big(latent_dim, kernel_height, kernel_width, dropout)
 
     optimizer = tf.keras.optimizers.Adam(lr)
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.000001, patience=10, verbose=0, mode='auto', baseline=None, restore_best_weights=False)
