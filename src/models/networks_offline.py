@@ -186,19 +186,19 @@ class VAE_Interim_Big(tf.keras.Model):
         return out
 
 
-class CNN_Processed(tf.keras.Model):
+class CNN_Interim(tf.keras.Model):
 
     def __init__(self, num_labels, input_length):
-        super(CNN_Processed, self).__init__()
+        super(CNN_Interim, self).__init__()
         self.encoder = tf.keras.Sequential(
             [
                 tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(
-                    filters=8, kernel_size=(kernel_height,kernel_width), strides=(2,2), activation='relu', padding='same'),
+                    filters=8, kernel_size=3, strides=2, activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=16, kernel_size=(kernel_height,kernel_width), strides=(2,2), activation='relu', padding='same'),
+                    filters=16, kernel_size=3, strides=2, activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=32, kernel_size=(kernel_height,kernel_width), strides=(2,2), activation='relu', padding='same'),
+                    filters=32, kernel_size=3, strides=2, activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
                     filters=64, kernel_size=3, strides=2, activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(

@@ -200,7 +200,7 @@ for i in range(len(list_wav)):
             frame_size = frame_sizes[k]
             num_spec = num_specs[j]
             
-            spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             if delta_bool:
                 delta = librosa.feature.delta(spec)
@@ -230,7 +230,7 @@ for i in range(len(list_wav)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
                     
             list_num = [Spec_Matrix.shape[0],len(Classes),len(Onset_Phonemes_Labels),len(Nucleus_Phonemes_Labels),len(Onset_Phonemes_Reduced_Labels),len(Nucleus_Phonemes_Reduced_Labels)]
@@ -253,22 +253,22 @@ for i in range(len(list_wav)):
                 np.save('../../data/interim/AVP/Syll_Onset_Reduced_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
                 np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
             
-    '''audio = np.concatenate((audio,np.zeros(4096)))
+    #audio = np.concatenate((audio,np.zeros(4096)))
 
-    audios_all = []
-    for osm in range(len(onsets_samples)-1):
-        audios_all.append(audio[onsets_samples[osm]:onsets_samples[osm+1]])
-    audios_all.append(audio[onsets_samples[osm+1]:])
+    #audios_all = []
+    #for osm in range(len(onsets_samples)-1):
+        #audios_all.append(audio[onsets_samples[osm]:onsets_samples[osm+1]])
+    #audios_all.append(audio[onsets_samples[osm+1]:])
 
-    if i<=9:
-        np.save('../../data/interim/AVP/Dataset_Test_Audio_0' + str(i), np.array(audios_all))
-    else:
-        np.save('../../data/interim/AVP/Dataset_Test_Audio_' + str(i), np.array(audios_all))
+    #if i<=9:
+        #np.save('../../data/interim/AVP/Dataset_Test_Audio_0' + str(i), np.array(audios_all))
+    #else:
+        #np.save('../../data/interim/AVP/Dataset_Test_Audio_' + str(i), np.array(audios_all))
 
-    if i==0:
-        for pl in range(10):
-            plt.figure()
-            plt.plot(np.array(audios_all[pl]))'''
+    #if i==0:
+        #for pl in range(10):
+            #plt.figure()
+            #plt.plot(np.array(audios_all[pl]))
 
 
 
@@ -346,7 +346,7 @@ for i in range(len(list_wav)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
             
-                spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 if delta_bool:
                     delta = librosa.feature.delta(spec)
@@ -378,7 +378,7 @@ for i in range(len(list_wav)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
                         
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -503,7 +503,7 @@ for j in range(len(num_specs)):
                         onsets = onsets_ref/st
                         onsets = onsets.astype(int)
 
-                    spec = librosa.feature.melspectrogram(np.concatenate((audio,np.zeros(4096))), sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                    spec = librosa.feature.melspectrogram(np.concatenate((audio,np.zeros(4096))), sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                     
                     if delta_bool:
                         delta = librosa.feature.delta(spec)
@@ -541,7 +541,7 @@ for j in range(len(num_specs)):
                                 Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                             elif c>=num_frames:
                                 Spec = Spec[:num_frames]
-                            Spec_Matrix[count] = Spec
+                            Spec_Matrix[count] = Spec.T
                             count += 1
 
                     list_num = [Spec_Matrix_All.shape[0],len(Classes_All),len(Onset_Phonemes_Labels_All),len(Nucleus_Phonemes_Labels_All),len(Onset_Phonemes_Reduced_Labels_All),len(Nucleus_Phonemes_Reduced_Labels_All)]
@@ -584,10 +584,10 @@ for j in range(len(num_specs)):
                 np.save('../../data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(part), Onset_Phonemes_Reduced_Labels_All)
                 np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
 
-            '''if i<=9:
-                np.save('../../data/interim/AVP_Audio/Dataset_Train_0' + str(part), np.array(audios_all))
-            else:
-                np.save('../../data/interim/AVP_Audio/Dataset_Train_' + str(part), np.array(audios_all))'''
+            #if i<=9:
+                #np.save('../../data/interim/AVP_Audio/Dataset_Train_0' + str(part), np.array(audios_all))
+            #else:
+                #np.save('../../data/interim/AVP_Audio/Dataset_Train_' + str(part), np.array(audios_all))
 
 
 # Create BTX Dataset
@@ -635,7 +635,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -689,9 +689,9 @@ for j in range(len(num_specs)):
 
 # Create BTX Aug Dataset
 
-Dataset_Str = 'BTX'
+Dataset_Str = 'BTX_Aug'
 
-path_audio = '../../Beatbox_Set'
+path_audio = '../../data/external/Beatbox_Set'
 
 list_wav = []
 list_csv_1 = []
@@ -751,7 +751,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -813,6 +813,7 @@ for j in range(len(num_specs)):
                 np.save('../../data/interim/BTX/Classes_BTX_Aug_' + str(i), Classes_All)
 
 
+
 # Create LVT_1 Dataset
 
 Dataset_Str = 'LVT1'
@@ -853,7 +854,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -877,7 +878,7 @@ for j in range(len(num_specs)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
 
             if i<=9:
@@ -931,7 +932,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -955,7 +956,7 @@ for j in range(len(num_specs)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
 
             if i<=9:
@@ -1009,7 +1010,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -1033,7 +1034,7 @@ for j in range(len(num_specs)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
 
             if i<=9:
@@ -1087,7 +1088,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -1111,7 +1112,7 @@ for j in range(len(num_specs)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
 
             if i<=9:
@@ -1169,7 +1170,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -1193,7 +1194,7 @@ for j in range(len(num_specs)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
 
             if i<=9:
@@ -1258,7 +1259,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -1282,7 +1283,7 @@ for j in range(len(num_specs)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
 
             if i<=9:
@@ -1348,7 +1349,7 @@ for j in range(len(num_specs)):
             onsets_samples = onsets*fs
             onsets = onsets_samples.astype(int)
 
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
             Onsets = np.zeros(Dataset_Spec.shape[0])
             location = np.floor(onsets/hop_size)
@@ -1372,7 +1373,7 @@ for j in range(len(num_specs)):
                         Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                     elif c>=num_frames:
                         Spec = Spec[:num_frames]
-                    Spec_Matrix[count] = Spec
+                    Spec_Matrix[count] = Spec.T
                     count += 1
                 
             if i<=9:
@@ -1463,7 +1464,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -1487,7 +1488,7 @@ for j in range(len(num_specs)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
             
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -1592,7 +1593,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -1616,7 +1617,7 @@ for j in range(len(num_specs)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
 
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -1721,7 +1722,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -1745,7 +1746,7 @@ for j in range(len(num_specs)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
 
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -1850,7 +1851,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -1874,7 +1875,7 @@ for j in range(len(num_specs)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
 
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -1979,7 +1980,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -2003,7 +2004,7 @@ for j in range(len(num_specs)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
 
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -2108,7 +2109,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -2132,7 +2133,7 @@ for j in range(len(num_specs)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
 
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -2223,7 +2224,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 if onsets.ndim==0:
 
@@ -2261,7 +2262,7 @@ for j in range(len(num_specs)):
                                 Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                             elif c>=num_frames:
                                 Spec = Spec[:num_frames]
-                            Spec_Matrix[count] = Spec
+                            Spec_Matrix[count] = Spec.T
                             count += 1
 
                     Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -2337,7 +2338,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -2361,14 +2362,14 @@ for j in range(len(num_specs)):
                             Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                         elif c>=num_frames:
                             Spec = Spec[:num_frames]
-                        Spec_Matrix[count] = Spec
+                        Spec_Matrix[count] = Spec.T
                         count += 1
 
                 Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
-        np.save('../../interim/AVP/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
+        np.save('../../data/interim/AVP/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
 
 
 
@@ -2429,7 +2430,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 if onsets.ndim==0:
 
@@ -2467,7 +2468,7 @@ for j in range(len(num_specs)):
                                 Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
                             elif c>=num_frames:
                                 Spec = Spec[:num_frames]
-                            Spec_Matrix[count] = Spec
+                            Spec_Matrix[count] = Spec.T
                             count += 1
 
                     Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
@@ -2536,7 +2537,7 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     #onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0)
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
 
                 location = int(np.floor(onsets/hop_size))
 
@@ -2551,3 +2552,70 @@ for j in range(len(num_specs)):
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
         np.save('../../data/interim/FSB/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
+
+
+
+
+# Create Zhu Aug Dataset
+
+Dataset_Str = 'Zhu_Aug'
+
+path_audio = '../../data/external/Beatbox_Zhu'
+
+list_wav = []
+list_csv = []
+
+for path, subdirs, files in os.walk(path_audio):
+    for filename in files:
+        if filename.endswith('.wav'):
+            list_wav.append(os.path.join(path, filename))
+        if filename.endswith('.csv'):
+            list_csv.append(os.path.join(path, filename))
+
+list_wav = sorted(list_wav)
+list_csv = sorted(list_csv)
+
+for j in range(len(num_specs)):
+    
+    for k in range(len(frame_sizes)):
+
+        frame_size = frame_sizes[k]
+        num_spec = num_specs[j]
+
+        Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
+
+        for i in range(len(list_wav)):
+
+            audio, fs = librosa.load(list_wav[i], sr=44100)
+            if len(audio)<frame_size:
+                continue
+            audio_ref = audio/np.max(abs(audio))
+            
+            for k in range(10):
+
+                kn = np.random.randint(0,2)
+                pt = np.random.uniform(low=-1.5, high=1.5, size=None)
+                st = np.random.uniform(low=0.8, high=1.2, size=None)
+
+                if kn==0:
+                    audio = pitch_shift(audio_ref, fs, pt)
+                    audio = time_stretch(audio, st)
+                elif kn==1:
+                    audio = time_stretch(audio_ref, st)
+                    audio = pitch_shift(audio, fs, pt)
+
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+
+                location = 0
+
+                Spec = Dataset_Spec[location:]
+                if Spec.shape[0]<num_frames:
+                    Spec = np.concatenate((Spec,np.zeros((num_frames-Spec.shape[0],num_spec))))
+                elif Spec.shape[0]>=num_frames:
+                    Spec = Spec[:num_frames]
+
+                Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec,axis=0)))
+
+        Spec_Matrix_All = Spec_Matrix_All[1:]
+
+        np.save('../../data/interim/ZHU/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
