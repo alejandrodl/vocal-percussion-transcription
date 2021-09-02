@@ -152,8 +152,7 @@ num_frames = 64
 hop_size = 345
 delta_bool = False
 
-pitch = [-1,1]
-times = [0.85,1.15]
+
 
 # Create AVP Test Dataset
 
@@ -195,9 +194,9 @@ for i in range(len(list_wav)):
     
     for j in range(len(num_specs)):
         
-        for k in range(len(frame_sizes)):
+        for w in range(len(frame_sizes)):
         
-            frame_size = frame_sizes[k]
+            frame_size = frame_sizes[w]
             num_spec = num_specs[j]
             
             spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
@@ -311,9 +310,9 @@ for i in range(len(list_wav)):
     
     for j in range(len(num_specs)):
         
-        for k in range(len(frame_sizes)):
+        for w in range(len(frame_sizes)):
         
-            frame_size = frame_sizes[k]
+            frame_size = frame_sizes[w]
             num_spec = num_specs[j]
             
             Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
@@ -453,9 +452,9 @@ list_csv_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
 
 for j in range(len(num_specs)):
 
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
         
         for part in range(28):
@@ -590,229 +589,6 @@ for j in range(len(num_specs)):
                 #np.save('../../data/interim/AVP_Audio/Dataset_Train_' + str(part), np.array(audios_all))
 
 
-# Create BTX Dataset
-
-Dataset_Str = 'BTX'
-
-path_audio = '../../data/external/Beatbox_Set'
-
-list_wav = []
-list_csv_1 = []
-
-for path, subdirs, files in os.walk(path_audio):
-    for filename in files:
-        if filename.endswith('.wav'):
-            list_wav.append(os.path.join(path, filename))
-        if filename.endswith('.csv'):
-            list_csv_1.append(os.path.join(path, filename))
-
-list_wav = sorted(list_wav)
-list_csv = sorted(list_csv_1[:14])
-
-for j in range(len(num_specs)):
-
-    for k in range(len(frame_sizes)):
-
-        frame_size = frame_sizes[k]
-        num_spec = num_specs[j]
-
-        for i in range(len(list_wav)):
-
-            Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
-            Classes_All = np.zeros(1)
-
-            onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
-
-            Classes = []
-            labels = np.genfromtxt(list_csv[i], dtype='S', delimiter=',', usecols=1).tolist()
-            for h in range(len(labels)):
-                Classes.append(labels[h].decode("utf-8"))
-            Classes = np.array(Classes)
-
-            audio, fs = librosa.load(list_wav[i], sr=44100)
-            audio = audio/np.max(abs(audio))
-
-            onsets_samples = onsets*fs
-            onsets = onsets_samples.astype(int)
-
-            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
-
-            Onsets = np.zeros(Dataset_Spec.shape[0])
-            location = np.floor(onsets/hop_size)
-            if (location.astype(int)[-1]<len(Onsets)):
-                Onsets[location.astype(int)] = 1
-            else:
-                Onsets[location.astype(int)[:-1]] = 1
-
-            if Onsets[len(Onsets)-1]==1:
-                Classes = Classes[:-1]
-            if Onsets[len(Onsets)-1]==1:
-                Onsets[len(Onsets)-1] = 0
-                print(len(Classes))
-                print(int(np.sum(Onsets)))
-
-            num_onsets = int(np.sum(Onsets))
-            if num_onsets!=len(Classes):
-                raise('num_onsets!=len(Classes)')
-            Spec_Matrix = np.zeros((1,num_frames,num_spec))
-
-            L = len(Onsets)
-            count = 0
-            cc = 0
-            Classes_Select = []
-            for n in range(L):
-                if Onsets[n]==1:
-                    if Classes[cc]=='k' or Classes[cc]=='hc' or Classes[cc]=='ho' or Classes[cc]=='sb' or Classes[cc]=='sk' or Classes[cc]=='s':
-                        Classes_Select.append(Classes[cc])
-                        c = 1
-                        while Onsets[n+c]==0 and (n+c)<L-1:
-                            c += 1
-                        Spec = Dataset_Spec[n:n+c]
-                        if c<num_frames:
-                            Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
-                        elif c>=num_frames:
-                            Spec = Spec[:num_frames]
-                        Spec_Matrix = np.vstack((Spec_Matrix,np.expand_dims(Spec,axis=0)))
-                        count += 1
-                    cc += 1
-
-            Spec_Matrix = Spec_Matrix[1:]
-
-            if i<=9:
-                np.save('../../data/interim/BTX/Dataset_BTX_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/BTX/Classes_BTX_0' + str(i), Classes_Select)
-            else:
-                np.save('../../data/interim/BTX/Dataset_BTX_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/BTX/Classes_BTX_' + str(i), Classes_Select)
-
-
-
-# Create BTX Aug Dataset
-
-Dataset_Str = 'BTX_Aug'
-
-path_audio = '../../data/external/Beatbox_Set'
-
-list_wav = []
-list_csv_1 = []
-
-for path, subdirs, files in os.walk(path_audio):
-    for filename in files:
-        if filename.endswith('.wav'):
-            list_wav.append(os.path.join(path, filename))
-        if filename.endswith('.csv'):
-            list_csv_1.append(os.path.join(path, filename))
-
-list_wav = sorted(list_wav)
-list_csv = sorted(list_csv_1[:14])
-
-for j in range(len(num_specs)):
-
-    for k in range(len(frame_sizes)):
-
-        frame_size = frame_sizes[k]
-        num_spec = num_specs[j]
-
-        for i in range(len(list_wav)):
-
-            Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
-            Classes_All = np.zeros(1)
-
-            onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
-
-            audio, fs = librosa.load(list_wav[i], sr=44100)
-            audio_ref = audio/np.max(abs(audio))
-
-            onsets_samples = onsets*fs
-            onsets_ref = onsets_samples.astype(int)
-
-            for k in range(10):
-
-                Classes = []
-                labels = np.genfromtxt(list_csv[i], dtype='S', delimiter=',', usecols=1).tolist()
-                for h in range(len(labels)):
-                    Classes.append(labels[h].decode("utf-8"))
-                Classes = np.array(Classes)
-
-                Classes = np.loadtxt(list_csv[i], delimiter=',', usecols=1, dtype=np.unicode_)
-
-                kn = np.random.randint(0,2)
-                pt = np.random.uniform(low=-1.5, high=1.5, size=None)
-                st = np.random.uniform(low=0.8, high=1.2, size=None)
-
-                if kn==0:
-                    audio = pitch_shift(audio_ref, fs, pt)
-                    audio = time_stretch(audio, st)
-                    onsets = onsets_ref/st
-                    onsets = onsets.astype(int)
-                elif kn==1:
-                    audio = time_stretch(audio_ref, st)
-                    audio = pitch_shift(audio, fs, pt)
-                    onsets = onsets_ref/st
-                    onsets = onsets.astype(int)
-
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
-
-                Onsets = np.zeros(Dataset_Spec.shape[0])
-                location = np.floor(onsets/hop_size)
-                if (location.astype(int)[-1]<len(Onsets)):
-                    Onsets[location.astype(int)] = 1
-                else:
-                    Onsets[location.astype(int)[:-1]] = 1
-
-                if Onsets[len(Onsets)-1]==1:
-                    Classes = Classes[:-1]
-                if Onsets[len(Onsets)-1]==1:
-                    Onsets[len(Onsets)-1] = 0
-                    print(len(Classes))
-                    print(int(np.sum(Onsets)))
-
-                num_onsets = int(np.sum(Onsets))
-                if num_onsets!=len(Classes):
-                    raise('num_onsets!=len(Classes)')
-                Spec_Matrix = np.zeros((1,num_frames,num_spec))
-
-                L = len(Onsets)
-                count = 0
-                cc = 0
-                Classes_Select = []
-                for n in range(L):
-                    if Onsets[n]==1:
-                        if Classes[cc]=='k' or Classes[cc]=='hc' or Classes[cc]=='ho' or Classes[cc]=='sb' or Classes[cc]=='sk' or Classes[cc]=='s':
-                            Classes_Select.append(Classes[cc])
-                            c = 1
-                            while Onsets[n+c]==0 and (n+c)<L-1:
-                                c += 1
-                            Spec = Dataset_Spec[n:n+c]
-                            if c<num_frames:
-                                Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
-                            elif c>=num_frames:
-                                Spec = Spec[:num_frames]
-                            Spec_Matrix = np.vstack((Spec_Matrix,np.expand_dims(Spec,axis=0)))
-                            count += 1
-                        cc += 1
-
-                Spec_Matrix = Spec_Matrix[1:]
-
-                if Spec_Matrix.shape[0]==len(Classes_Select):
-                    Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
-                    Classes_All = np.concatenate((Classes_All,Classes_Select))
-                else:
-                    print('Cuidao')
-                    print(Spec_Matrix_All.shape)
-                    print(Classes_All.shape)
-
-            Spec_Matrix_All = Spec_Matrix_All[1:]
-            Classes_All = Classes_All[1:]
-
-            if i<=9:
-                np.save('../../data/interim/BTX/Dataset_BTX_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/BTX/Classes_BTX_Aug_0' + str(i), Classes_All)
-            else:
-                np.save('../../data/interim/BTX/Dataset_BTX_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/BTX/Classes_BTX_Aug_' + str(i), Classes_All)
-
-
 
 # Create LVT_1 Dataset
 
@@ -838,9 +614,9 @@ list_csv = list_csv[:20]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -916,9 +692,9 @@ list_csv = list_csv[:20]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -994,9 +770,9 @@ list_csv = list_csv[:20]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1072,9 +848,9 @@ list_csv = list_csv[:20]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1150,9 +926,9 @@ list_csv = list_csv[20:]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1239,9 +1015,9 @@ list_csv = list_csv[20:]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1329,9 +1105,9 @@ list_csv = list_csv[20:]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1419,9 +1195,9 @@ list_csv = list_csv[:20]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1548,9 +1324,9 @@ list_csv = list_csv[:20]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1677,9 +1453,9 @@ list_csv = list_csv[:20]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1806,9 +1582,9 @@ list_csv = list_csv[20:]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -1935,9 +1711,9 @@ list_csv = list_csv[20:]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -2064,9 +1840,9 @@ list_csv = list_csv[20:]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         for i in range(len(list_wav)):
@@ -2169,6 +1945,233 @@ for j in range(len(num_specs)):
 
 
 
+
+# Create BTX Dataset
+
+Dataset_Str = 'BTX'
+
+path_audio = '../../data/external/Beatbox_Set'
+
+list_wav = []
+list_csv_1 = []
+
+for path, subdirs, files in os.walk(path_audio):
+    for filename in files:
+        if filename.endswith('.wav'):
+            list_wav.append(os.path.join(path, filename))
+        if filename.endswith('.csv'):
+            list_csv_1.append(os.path.join(path, filename))
+
+list_wav = sorted(list_wav)
+list_csv = sorted(list_csv_1[:14])
+
+for j in range(len(num_specs)):
+
+    for w in range(len(frame_sizes)):
+
+        frame_size = frame_sizes[w]
+        num_spec = num_specs[j]
+
+        for i in range(len(list_wav)):
+
+            Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
+            Classes_All = np.zeros(1)
+
+            onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
+
+            Classes = []
+            labels = np.genfromtxt(list_csv[i], dtype='S', delimiter=',', usecols=1).tolist()
+            for h in range(len(labels)):
+                Classes.append(labels[h].decode("utf-8"))
+            Classes = np.array(Classes)
+
+            audio, fs = librosa.load(list_wav[i], sr=44100)
+            audio = audio/np.max(abs(audio))
+
+            onsets_samples = onsets*fs
+            onsets = onsets_samples.astype(int)
+
+            Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+
+            Onsets = np.zeros(Dataset_Spec.shape[0])
+            location = np.floor(onsets/hop_size)
+            if (location.astype(int)[-1]<len(Onsets)):
+                Onsets[location.astype(int)] = 1
+            else:
+                Onsets[location.astype(int)[:-1]] = 1
+
+            if Onsets[len(Onsets)-1]==1:
+                Classes = Classes[:-1]
+            if Onsets[len(Onsets)-1]==1:
+                Onsets[len(Onsets)-1] = 0
+                print(len(Classes))
+                print(int(np.sum(Onsets)))
+
+            num_onsets = int(np.sum(Onsets))
+            if num_onsets!=len(Classes):
+                raise('num_onsets!=len(Classes)')
+            Spec_Matrix = np.zeros((1,num_frames,num_spec))
+
+            L = len(Onsets)
+            count = 0
+            cc = 0
+            Classes_Select = []
+            for n in range(L):
+                if Onsets[n]==1:
+                    if Classes[cc]=='k' or Classes[cc]=='hc' or Classes[cc]=='ho' or Classes[cc]=='sb' or Classes[cc]=='sk' or Classes[cc]=='s':
+                        Classes_Select.append(Classes[cc])
+                        c = 1
+                        while Onsets[n+c]==0 and (n+c)<L-1:
+                            c += 1
+                        Spec = Dataset_Spec[n:n+c]
+                        if c<num_frames:
+                            Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
+                        elif c>=num_frames:
+                            Spec = Spec[:num_frames]
+                        Spec_Matrix = np.vstack((Spec_Matrix,np.expand_dims(Spec.T,axis=0)))
+                        count += 1
+                    cc += 1
+
+            Spec_Matrix = Spec_Matrix[1:]
+
+            if i<=9:
+                np.save('../../data/interim/BTX/Dataset_BTX_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('../../data/interim/BTX/Classes_BTX_0' + str(i), Classes_Select)
+            else:
+                np.save('../../data/interim/BTX/Dataset_BTX_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('../../data/interim/BTX/Classes_BTX_' + str(i), Classes_Select)
+
+
+
+# Create BTX Aug Dataset
+
+Dataset_Str = 'BTX_Aug'
+
+path_audio = '../../data/external/Beatbox_Set'
+
+list_wav = []
+list_csv_1 = []
+
+for path, subdirs, files in os.walk(path_audio):
+    for filename in files:
+        if filename.endswith('.wav'):
+            list_wav.append(os.path.join(path, filename))
+        if filename.endswith('.csv'):
+            list_csv_1.append(os.path.join(path, filename))
+
+list_wav = sorted(list_wav)
+list_csv = sorted(list_csv_1[:14])
+
+for j in range(len(num_specs)):
+
+    for w in range(len(frame_sizes)):
+
+        frame_size = frame_sizes[w]
+        num_spec = num_specs[j]
+
+        for i in range(len(list_wav)):
+
+            Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
+            Classes_All = np.zeros(1)
+
+            onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
+
+            audio, fs = librosa.load(list_wav[i], sr=44100)
+            audio_ref = audio/np.max(abs(audio))
+
+            onsets_samples = onsets*fs
+            onsets_ref = onsets_samples.astype(int)
+
+            for k in range(10):
+
+                Classes = []
+                labels = np.genfromtxt(list_csv[i], dtype='S', delimiter=',', usecols=1).tolist()
+                for h in range(len(labels)):
+                    Classes.append(labels[h].decode("utf-8"))
+                Classes = np.array(Classes)
+
+                Classes = np.loadtxt(list_csv[i], delimiter=',', usecols=1, dtype=np.unicode_)
+
+                kn = np.random.randint(0,2)
+                pt = np.random.uniform(low=-1.5, high=1.5, size=None)
+                st = np.random.uniform(low=0.8, high=1.2, size=None)
+
+                if kn==0:
+                    audio = pitch_shift(audio_ref, fs, pt)
+                    audio = time_stretch(audio, st)
+                    onsets = onsets_ref/st
+                    onsets = onsets.astype(int)
+                elif kn==1:
+                    audio = time_stretch(audio_ref, st)
+                    audio = pitch_shift(audio, fs, pt)
+                    onsets = onsets_ref/st
+                    onsets = onsets.astype(int)
+
+                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+
+                Onsets = np.zeros(Dataset_Spec.shape[0])
+                location = np.floor(onsets/hop_size)
+                if (location.astype(int)[-1]<len(Onsets)):
+                    Onsets[location.astype(int)] = 1
+                else:
+                    Onsets[location.astype(int)[:-1]] = 1
+
+                if Onsets[len(Onsets)-1]==1:
+                    Classes = Classes[:-1]
+                if Onsets[len(Onsets)-1]==1:
+                    Onsets[len(Onsets)-1] = 0
+                    print(len(Classes))
+                    print(int(np.sum(Onsets)))
+
+                num_onsets = int(np.sum(Onsets))
+                if num_onsets!=len(Classes):
+                    raise('num_onsets!=len(Classes)')
+                Spec_Matrix = np.zeros((1,num_frames,num_spec))
+
+                L = len(Onsets)
+                count = 0
+                cc = 0
+                Classes_Select = []
+                for n in range(L):
+                    if Onsets[n]==1:
+                        if Classes[cc]=='k' or Classes[cc]=='hc' or Classes[cc]=='ho' or Classes[cc]=='sb' or Classes[cc]=='sk' or Classes[cc]=='s':
+                            Classes_Select.append(Classes[cc])
+                            c = 1
+                            while Onsets[n+c]==0 and (n+c)<L-1:
+                                c += 1
+                            Spec = Dataset_Spec[n:n+c]
+                            if c<num_frames:
+                                Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
+                            elif c>=num_frames:
+                                Spec = Spec[:num_frames]
+                            Spec_Matrix = np.vstack((Spec_Matrix,np.expand_dims(Spec.T,axis=0)))
+                            count += 1
+                        cc += 1
+
+                Spec_Matrix = Spec_Matrix[1:]
+
+                if Spec_Matrix.shape[0]==len(Classes_Select):
+                    Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
+                    Classes_All = np.concatenate((Classes_All,Classes_Select))
+                else:
+                    print('Cuidao')
+                    print(Spec_Matrix_All.shape)
+                    print(Classes_All.shape)
+
+            Spec_Matrix_All = Spec_Matrix_All[1:]
+            Classes_All = Classes_All[1:]
+
+            if i<=9:
+                np.save('../../data/interim/BTX/Dataset_BTX_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('../../data/interim/BTX/Classes_BTX_Aug_0' + str(i), Classes_All)
+            else:
+                np.save('../../data/interim/BTX/Dataset_BTX_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('../../data/interim/BTX/Classes_BTX_Aug_' + str(i), Classes_All)
+
+
+
+
+
 # Create VIM_Percussive Aug Dataset
 
 Dataset_Str = 'VIM_Percussive_Aug'
@@ -2190,9 +2193,9 @@ list_csv = sorted(list_csv)
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
@@ -2236,7 +2239,7 @@ for j in range(len(num_specs)):
                     elif Spec.shape[0]>=num_frames:
                         Spec = Spec[:num_frames]
 
-                    Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec,axis=0)))
+                    Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec.T,axis=0)))
 
                 else:
 
@@ -2304,9 +2307,9 @@ list_csv = list_csv[::2]
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
@@ -2396,9 +2399,9 @@ list_csv = sorted(list_csv)
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
@@ -2442,7 +2445,7 @@ for j in range(len(num_specs)):
                     elif Spec.shape[0]>=num_frames:
                         Spec = Spec[:num_frames]
 
-                    Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec,axis=0)))
+                    Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec.T,axis=0)))
 
                 else:
 
@@ -2502,9 +2505,9 @@ list_csv = sorted(list_csv)
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
@@ -2547,7 +2550,7 @@ for j in range(len(num_specs)):
                 elif Spec.shape[0]>=num_frames:
                     Spec = Spec[:num_frames]
 
-                Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec,axis=0)))
+                Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec.T,axis=0)))
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
@@ -2577,9 +2580,9 @@ list_csv = sorted(list_csv)
 
 for j in range(len(num_specs)):
     
-    for k in range(len(frame_sizes)):
+    for w in range(len(frame_sizes)):
 
-        frame_size = frame_sizes[k]
+        frame_size = frame_sizes[w]
         num_spec = num_specs[j]
 
         Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
@@ -2614,7 +2617,7 @@ for j in range(len(num_specs)):
                 elif Spec.shape[0]>=num_frames:
                     Spec = Spec[:num_frames]
 
-                Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec,axis=0)))
+                Spec_Matrix_All = np.vstack((Spec_Matrix_All,np.expand_dims(Spec.T,axis=0)))
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
