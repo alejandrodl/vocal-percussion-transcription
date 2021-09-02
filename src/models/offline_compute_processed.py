@@ -161,11 +161,11 @@ for frame_size in frame_sizes:
                     continue
                 else:
                     if n<=9:
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
                     else:
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Train_Aug_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Test_Aug_' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Test_Aug_' + str(n) + '.npy')))
             classes_str = classes_str[1:]
 
             classes = np.zeros(len(classes_str))
@@ -187,11 +187,11 @@ for frame_size in frame_sizes:
                     continue
                 else:
                     if n<=9:
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
                     else:
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Train_Aug_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../Data/UC_AVP/Classes_Test_Aug_' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                        classes_str = np.concatenate((classes_str, np.load('../../data/external/AVP/Classes_Test_Aug_' + str(n) + '.npy')))
             classes_str = classes_str[1:]
 
             classes = np.zeros(len(classes_str))
@@ -267,7 +267,7 @@ for frame_size in frame_sizes:
                     model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError(), metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=False)
                     history = model.fit(pretrain_dataset_train, pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_dataset_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
 
-                    fpath = 'best_models/pretrained_' + mode + '_' + frame_size + '_' + str(it)
+                    fpath = '../../models/pretrained_' + mode + '_' + frame_size + '_' + str(it)
                     model.save_weights(fpath+'.h5')
 
             elif 'phon' in mode:
@@ -281,7 +281,7 @@ for frame_size in frame_sizes:
 
                     history = model.fit(pretrain_dataset_train, [train_classes_onset, train_classes_nucleus], batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,[test_classes_onset,test_classes_nucleus]), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
 
-                    fpath = 'best_models/pretrained_' + mode + '_' + frame_size + '_' + str(it)
+                    fpath = '../../models/pretrained_' + mode + '_' + frame_size + '_' + str(it)
                     model.save_weights(fpath+'.h5')
 
             else:
@@ -297,5 +297,5 @@ for frame_size in frame_sizes:
                     model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
                     history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
 
-                    fpath = 'best_models/pretrained_' + mode + '_' + frame_size + '_' + str(it)
+                    fpath = '../../models/pretrained_' + mode + '_' + frame_size + '_' + str(it)
                     model.save_weights(fpath+'.h5')
