@@ -16,6 +16,15 @@ import tensorflow_probability as tfp
 
 
 
+def also_valid_function(classes_also_valid, predicted):
+    c = 0
+    for n in range(len(classes_also_valid)):
+        if predicted[n] in classes_also_valid[n]:
+            c += 1
+    accuracy = c/len(classes_also_valid)
+    return accuracy
+    
+
 def generate_and_save_images(model, epoch, test_sample):
     mean, logvar = model.encode(test_sample)
     z = model.reparameterize(mean, logvar)

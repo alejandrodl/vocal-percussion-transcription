@@ -33,15 +33,15 @@ class VAE_Interim(tf.keras.Model):
             [
                 tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(
-                    filters=8, kernel_size=(kernel_height,kernel_width), strides=(2,2), activation='relu', padding='same'),
+                    filters=8, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=16, kernel_size=(kernel_height,kernel_width), strides=(2,2), activation='relu', padding='same'),
+                    filters=16, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=32, kernel_size=(kernel_height,kernel_width), strides=(2,2), activation='relu', padding='same'),
+                    filters=32, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=64, kernel_size=3, strides=2, activation='relu', padding='same'),
+                    filters=64, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=128, kernel_size=3, strides=2, activation='relu', padding='same'),
+                    filters=128, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Flatten(),
                 # No activation
                 tf.keras.layers.Dense(self.latent_dim+self.latent_dim),
@@ -54,15 +54,15 @@ class VAE_Interim(tf.keras.Model):
                 tf.keras.layers.Dense(units=2*2*128, activation=tf.nn.relu),
                 tf.keras.layers.Reshape(target_shape=(2, 2, 128)),
                 tf.keras.layers.Conv2DTranspose(
-                    filters=64, kernel_size=3, strides=2, padding='same', activation='relu'),
+                    filters=64, kernel_size=(3,3), strides=(2,2), padding='same', activation='relu'),
                 tf.keras.layers.Conv2DTranspose(
-                    filters=32, kernel_size=3, strides=2, padding='same', activation='relu'),
+                    filters=32, kernel_size=(3,3), strides=(2,2), padding='same', activation='relu'),
                 tf.keras.layers.Conv2DTranspose(
-                    filters=16, kernel_size=(kernel_height,kernel_width), strides=2, padding='same', activation='relu'),
+                    filters=16, kernel_size=(3,3), strides=(2,2), padding='same', activation='relu'),
                 tf.keras.layers.Conv2DTranspose(
-                    filters=8, kernel_size=(kernel_height,kernel_width), strides=2, padding='same', activation='relu'),
+                    filters=8, kernel_size=(3,3), strides=(2,2), padding='same', activation='relu'),
                 tf.keras.layers.Conv2DTranspose(
-                    filters=1, kernel_size=(kernel_height,kernel_width), strides=2, padding='same'),
+                    filters=1, kernel_size=(3,3), strides=(2,2), padding='same'),
             ]
         )
 
@@ -88,7 +88,7 @@ class VAE_Interim(tf.keras.Model):
         return logits
     
     def call(self, x):
-        batch_size = tf.shape(x).numpy()[0]
+        batch_size = tf.shape(x)[0]
         mean, logvar = self.encode(x)
         z = self.reparameterize(mean, logvar, batch_size)
         out = self.decode(z)
@@ -103,19 +103,19 @@ class CNN_Interim(tf.keras.Model):
             [
                 tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(
-                    filters=8, kernel_size=3, strides=2, activation='relu', padding='same'),
+                    filters=8, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=16, kernel_size=3, strides=2, activation='relu', padding='same'),
+                    filters=16, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=32, kernel_size=3, strides=2, activation='relu', padding='same'),
+                    filters=32, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=64, kernel_size=3, strides=2, activation='relu', padding='same'),
+                    filters=64, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Conv2D(
-                    filters=128, kernel_size=3, strides=2, activation='relu', padding='same'),
+                    filters=128, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same'),
                 tf.keras.layers.Flatten(),
                 tf.keras.layers.Dense(latent_dim),
-                tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Activation(activation='relu'),
+                #tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.Activation(activation='relu'),
                 tf.keras.layers.Dense(num_labels, activation='softmax'),
             ]
         )
@@ -130,18 +130,19 @@ def CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr) -> tf.keras.Mod
     This method builds and returns a Model
     :return:
     """
-    x_input = tf.keras.Input(shape=(256, 1), dtype='float32')
+
+    x_input = tf.keras.Input(shape=(64, 64, 1), dtype='float32')
 
     x = tf.keras.layers.InputLayer(input_shape=(64, 64, 1))(x_input)
-    x = tf.keras.layers.Conv2D(filters=8, kernel_size=3, strides=2, activation='relu', padding='same')(x)
-    x = tf.keras.layers.Conv2D(filters=16, kernel_size=3, strides=2, activation='relu', padding='same')(x)
-    x = tf.keras.layers.Conv2D(filters=32, kernel_size=3, strides=2, activation='relu', padding='same')(x)
-    x = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=2, activation='relu', padding='same')(x)
-    x = tf.keras.layers.Conv2D(filters=128, kernel_size=3, strides=2, activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(filters=128, kernel_size=(3,3), strides=(2,2), activation='relu', padding='same')(x)
     x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.Dense(latent_dim)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Activation(activation='relu')(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.Activation(activation='relu')(x)
     
     x_onset = tf.keras.layers.Dense(num_onset, activation='softmax', name="onset")(x)
     x_nucleus = tf.keras.layers.Dense(num_nucleus, activation='softmax', name="nucleus")(x)
