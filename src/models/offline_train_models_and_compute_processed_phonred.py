@@ -10,7 +10,7 @@ from networks_offline import *
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -26,7 +26,7 @@ if gpus:
 
 percentage_train = 85
 modes = ['phonred'] # Triplet!!
-min_acc = [0.45]
+min_acc = [0.47]
 
 # Data parameters
 
@@ -368,7 +368,7 @@ for m in range(len(modes)):
 
             if 'phon' in mode:
                 extractor = tf.keras.Sequential()
-                for layer in model.layers[:-4]:
+                for layer in model.layers[:-2]:
                     extractor.add(layer)
                 extractor.built = True
                 train_features = extractor.predict(train_dataset)
@@ -378,7 +378,7 @@ for m in range(len(modes)):
                 test_features, _ = model.encode(test_dataset)
             else:
                 extractor = tf.keras.Sequential()
-                for layer in model.layers[:-3]:
+                for layer in model.cnn.layers[:-1]:
                     extractor.add(layer)
                 extractor.built = True
                 train_features = extractor.predict(train_dataset)

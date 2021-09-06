@@ -1,13 +1,50 @@
 import os
+import sys
 import numpy as np
-import sklearn as skl
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from networks_offline import *
-from src.utils import *
+import xgboost as xgb
+import sklearn as skl
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
+#sys.path.insert(0, os.path.abspath(__file__+"/src/"))
+#from src.utils import *
+
+#sys.path.append('/homes/adl30/vocal-percussion-transcription')
+#from src.utils import *
 
 
+
+class MLP_Processed(tf.keras.Model):
+
+    def __init__(self, num_labels, input_length):
+        super(MLP_Processed, self).__init__()
+        self.encoder = tf.keras.Sequential(
+            [
+                tf.keras.layers.InputLayer(input_shape=(input_length, 1)),
+                tf.keras.layers.Flatten(),
+                tf.keras.layers.Dense(12),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Activation(activation='relu'),
+                tf.keras.layers.Dense(num_labels, activation='softmax'),
+            ]
+        )
+
+    def call(self, x):
+        out = self.encoder(x)
+        return out
+
+def also_valid_function(classes_also_valid, predicted):
+    c = 0
+    for n in range(len(classes_also_valid)):
+        if predicted[n] in classes_also_valid[n]:
+            c += 1
+    accuracy = c/len(classes_also_valid)
+    return accuracy
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
@@ -25,8 +62,11 @@ if gpus:
 
 num_it = 10
 percentage_train = 70
-modes = ['vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
-clfs = ['mlp','logr','knn','rf','xgboost']
+#modes = ['vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
+modes = ['vae','classall','classred','syllred','phonall','phonred']
+#clfs = ['mlp','logr','knn','rf','xgboost']
+#clfs = ['logr','knn','rf','xgboost']
+clfs = ['logr','knn']
 
 # Data parameters
 
@@ -35,10 +75,10 @@ frame_sizes = ['512','1024','2048']
 # Network parameters
 
 latent_dim = 32
-lr = 1e-3
 
 # MLP parameters
 
+lr = 2*1e-3
 epochs = 10000
 patience_lr = 5
 patience_early = 10
@@ -66,32 +106,30 @@ max_depth = 10
 min_child_weight = 5
 colsample = 0.8
 subsample = 0.9
-learning_rate = 0.01
+learning_rate = 0.02
 reg_lambda = 1.2
 reg_alpha = 1.2
-n_estimators = 300
+n_estimators = 500
 
 params = {'max_depth': max_depth,
-          'min_child_weight': min_child_weight,
-          'learning_rate': learning_rate,
-          'subsample': subsample,
-          'colsample_bytree': colsample,
-          'objective': 'multi:softmax',
-          'reg_lambda': reg_lambda,
-          'reg_alpha': reg_alpha,
-          'n_estimators': n_estimators,
-          'tree_method': 'gpu_hist',
-          'gpu_id': 0}
+        'min_child_weight': min_child_weight,
+        'learning_rate': learning_rate,
+        'subsample': subsample,
+        'colsample_bytree': colsample,
+        'objective': 'multi:softmax',
+        'reg_lambda': reg_lambda,
+        'reg_alpha': reg_alpha,
+        'n_estimators': n_estimators} # 'seed': it, 'random_state': it, 'tree_method': 'gpu_hist', 'gpu_id': 0
 
-classes_also_valid = np.load('../../data/interim/AVP/Classes_Also_Valid_AVP.npy',allow_pickle=True)
+classes_also_valid = np.load('data/interim/AVP/Classes_Also_Valid_AVP.npy',allow_pickle=True)
 
-accuracies = np.zeros((len(frame_sizes),28,(len(clfs),num_it))
-accuracies_also_valid = np.zeros((len(frame_sizes),28,(len(clfs),num_it))
+accuracies = np.zeros((len(frame_sizes),28,len(clfs),num_it))
+accuracies_also_valid = np.zeros((len(frame_sizes),28,len(clfs),num_it))
 
 for mode in modes:
 
-    if not os.path.isdir('../../results/' + mode):
-        os.mkdir('../../results/' + mode)
+    if not os.path.isdir('results/' + mode):
+        os.mkdir('results/' + mode)
 
     for a in range(len(frame_sizes)):
 
@@ -102,13 +140,13 @@ for mode in modes:
             # Load and process spectrograms
 
             print('\n')
-            print('Hyperparameters: ' + str([frame_size,kernel_height,kernel_width,part]))
+            print('Hyperparameters: ' + str([frame_size,part]))
             print('\n')
 
             if part<=9:
-                classes_str = np.load('../../data/interim/AVP/Classes_Test_0' + str(part) + '.npy')
+                classes_str = np.load('data/interim/AVP/Classes_Test_0' + str(part) + '.npy')
             else:
-                classes_str = np.load('../../data/interim/AVP/Classes_Test_' + str(part) + '.npy')
+                classes_str = np.load('data/interim/AVP/Classes_Test_' + str(part) + '.npy')
 
             classes_eval = np.zeros(len(classes_str))
             for n in range(len(classes_str)):
@@ -124,9 +162,9 @@ for mode in modes:
             classes_eval_also_valid = classes_also_valid[part]
 
             if part<=9:
-                classes_str = np.load('../../data/interim/AVP/Classes_Train_Aug_0' + str(part) + '.npy')
+                classes_str = np.load('data/interim/AVP/Classes_Train_Aug_0' + str(part) + '.npy')
             else:
-                classes_str = np.load('../../data/interim/AVP/Classes_Train_Aug_' + str(part) + '.npy')
+                classes_str = np.load('data/interim/AVP/Classes_Train_Aug_' + str(part) + '.npy')
 
             classes = np.zeros(len(classes_str))
             for n in range(len(classes_str)):
@@ -140,11 +178,11 @@ for mode in modes:
                     classes[n] = 3
 
             if part<=9:
-                dataset = np.load('../../data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_0' + str(part) + '_' + str(it) + '.npy')
-                dataset_eval = np.load('../../data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_0' + str(part) + '_' + str(it) + '.npy')
+                dataset = np.load('data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_0' + str(part) + '.npy')
+                dataset_eval = np.load('data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_0' + str(part) + '.npy')
             else:
-                dataset = np.load('../../data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_' + str(part) + '_' + str(it) + '.npy')
-                dataset_eval = np.load('../../data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_' + str(part) + '_' + str(it) + '.npy')
+                dataset = np.load('data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
+                dataset_eval = np.load('data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
             
             dataset = dataset-np.mean(np.vstack((dataset,dataset_eval)))/np.std(np.vstack((dataset,dataset_eval)))
             dataset_eval = dataset_eval-np.mean(np.vstack((dataset,dataset_eval)))/np.std(np.vstack((dataset,dataset_eval)))
@@ -184,7 +222,7 @@ for mode in modes:
                         
                         with tf.device(gpu_name):
 
-                            model = MLP_VPT(np.max(classes)+1, latent_dim)
+                            model = MLP_Processed(np.max(classes)+1, latent_dim)
 
                             optimizer = tf.keras.optimizers.Adam(lr)
                             early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0, patience=patience_early, verbose=0, mode='auto', baseline=None, restore_best_weights=True)
@@ -200,41 +238,61 @@ for mode in modes:
                             accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, predicted)
                             print('Also Valid: ' + str(accuracies_also_valid[a,part,b,it]))
 
-                            np.save('../../results/Accuracies_' + mode + '_' + clf + '_' + frame_size, accuracies)
-                            np.save('../../results/Accuracies_Also_Valid_' + mode + '_' + clf + '_' + frame_size, accuracies_also_valid)
+                            np.save('results/Accuracies_' + mode + '_' + clf + '_' + frame_size, accuracies)
+                            np.save('results/Accuracies_Also_Valid_' + mode + '_' + clf + '_' + frame_size, accuracies_also_valid)
 
                 elif clf=='logr':
 
-                        clf = skl.linear_model.LogisticRegression(tol=tol, C=reg_str, solver=solver, max_iter=max_iter)
+                    for it in range(num_it):
+
+                        clf = LogisticRegression(tol=tol, C=reg_str, solver=solver, max_iter=max_iter)
                         clf.fit(dataset, classes)
 
                         accuracies[a,part,b,it] = clf.score(dataset_eval, classes_eval)
                         accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
+
+                        print(accuracies[a,part,b,it])
+                        print(accuracies_also_valid[a,part,b,it])
 
                 elif clf=='knn':
 
-                        clf = skl.neighbors.KNeighborsClassifier(n_neighbors=n_neighbors)
+                    for it in range(num_it):
+
+                        clf = KNeighborsClassifier(n_neighbors=n_neighbors)
                         clf.fit(dataset, classes)
 
                         accuracies[a,part,b,it] = clf.score(dataset_eval, classes_eval)
                         accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
+
+                        print(accuracies[a,part,b,it])
+                        print(accuracies_also_valid[a,part,b,it])
 
                 elif clf=='rf':
 
-                        clf = skl.ensemble.RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
+                    for it in range(num_it):
+
+                        clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
                         clf.fit(dataset, classes)
 
                         accuracies[a,part,b,it] = clf.score(dataset_eval, classes_eval)
                         accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
 
+                        print(accuracies[a,part,b,it])
+                        print(accuracies_also_valid[a,part,b,it])
+
                 elif clf=='xgboost':
+
+                    for it in range(num_it):
 
                         model = xgb.XGBClassifier(**params)
                         model.fit(dataset, classes, eval_metric='merror')
 
-                        accuracies[a,part,b,it] = sklearn.metrics.accuracy_score(classes_eval, model.predict(dataset_eval))
+                        accuracies[a,part,b,it] = accuracy_score(classes_eval, model.predict(dataset_eval))
                         accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, model.predict(dataset_eval))
 
-    np.save('../../results/' + mode + '/accuracies', accuracies)
-    np.save('../../results/' + mode + '/accuracies_also_valid', accuracies_also_valid)
+                        print(accuracies[a,part,b,it])
+                        print(accuracies_also_valid[a,part,b,it])
+
+    np.save('results/' + mode + '/accuracies', accuracies)
+    np.save('results/' + mode + '/accuracies_also_valid', accuracies_also_valid)
                         

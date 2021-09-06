@@ -132,3 +132,5 @@ dmypy.json
 data/external
 data/interim
 data/processed
+data/processed_7_sep
+results

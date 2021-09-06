@@ -26,12 +26,11 @@ if gpus:
 
 percentage_train = 85
 modes = ['syllall'] # Triplet!!
-min_acc = [0.3]
+min_acc = [0.30]
 
 # Data parameters
 
-#frame_sizes = ['512','1024','2048']
-frame_sizes = ['2048']
+frame_sizes = ['512','1024','2048']
 
 # Network parameters
 
@@ -369,7 +368,7 @@ for m in range(len(modes)):
 
             if 'phon' in mode:
                 extractor = tf.keras.Sequential()
-                for layer in model.layers[:-4]:
+                for layer in model.layers[:-2]:
                     extractor.add(layer)
                 extractor.built = True
                 train_features = extractor.predict(train_dataset)
@@ -379,7 +378,7 @@ for m in range(len(modes)):
                 test_features, _ = model.encode(test_dataset)
             else:
                 extractor = tf.keras.Sequential()
-                for layer in model.layers[:-3]:
+                for layer in model.cnn.layers[:-1]:
                     extractor.add(layer)
                 extractor.built = True
                 train_features = extractor.predict(train_dataset)
