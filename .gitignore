@@ -131,3 +131,4 @@ dmypy.json
 # Folders
 data/external
 data/interim
+data/processed

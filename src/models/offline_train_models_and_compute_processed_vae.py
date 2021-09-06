@@ -10,7 +10,7 @@ from networks_offline import *
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 os.nice(0)
 gpu_name = '/GPU:0'
 

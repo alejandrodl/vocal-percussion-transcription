@@ -9,7 +9,7 @@ from src.utils import *
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -71,22 +71,22 @@ reg_lambda = 1.2
 reg_alpha = 1.2
 n_estimators = 300
 
-params = {'max_depth':max_depth,
+params = {'max_depth': max_depth,
           'min_child_weight': min_child_weight,
-          'learning_rate':learning_rate,
+          'learning_rate': learning_rate,
           'subsample': subsample,
           'colsample_bytree': colsample,
-          'objective':'multi:softmax',
-          'reg_lambda':reg_lambda,
-          'reg_alpha':reg_alpha,
-          'n_estimators':n_estimators,
-          'tree_method':'gpu_hist',
-          'gpu_id':0}
+          'objective': 'multi:softmax',
+          'reg_lambda': reg_lambda,
+          'reg_alpha': reg_alpha,
+          'n_estimators': n_estimators,
+          'tree_method': 'gpu_hist',
+          'gpu_id': 0}
 
 classes_also_valid = np.load('../../data/interim/AVP/Classes_Also_Valid_AVP.npy',allow_pickle=True)
 
-accuracies = np.zeros((len(frame_sizes),28,num_it))
-accuracies_also_valid = np.zeros((len(frame_sizes),28,num_it))
+accuracies = np.zeros((len(frame_sizes),28,(len(clfs),num_it))
+accuracies_also_valid = np.zeros((len(frame_sizes),28,(len(clfs),num_it))
 
 for mode in modes:
 
@@ -162,7 +162,9 @@ for mode in modes:
             dataset_eval = dataset_eval.astype('float32')
             classes_eval = classes_eval.astype('float32')
 
-            for clf in clfs:
+            for b in range(len(clfs)):
+
+                clf = clfs[b]
 
                 if clf=='mlp':
 
@@ -194,9 +196,9 @@ for mode in modes:
                             test_loss, test_acc = model.evaluate(eval_features, eval_classes, verbose=2)
                             predicted = np.argmax(model.predict(eval_features),axis=1)
 
-                            accuracies[a,part,it] = test_acc
-                            accuracies_also_valid[a,part,it] = also_valid_function(classes_eval_also_valid, predicted)
-                            print('Also Valid: ' + str(accuracies_also_valid[a,part,it]))
+                            accuracies[a,part,b,it] = test_acc
+                            accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, predicted)
+                            print('Also Valid: ' + str(accuracies_also_valid[a,part,b,it]))
 
                             np.save('../../results/Accuracies_' + mode + '_' + clf + '_' + frame_size, accuracies)
                             np.save('../../results/Accuracies_Also_Valid_' + mode + '_' + clf + '_' + frame_size, accuracies_also_valid)
@@ -206,30 +208,33 @@ for mode in modes:
                         clf = skl.linear_model.LogisticRegression(tol=tol, C=reg_str, solver=solver, max_iter=max_iter)
                         clf.fit(dataset, classes)
 
-                        accuracies[a,part,it] = clf.score(dataset_eval, classes_eval)
-                        accuracies_also_valid[a,part,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
+                        accuracies[a,part,b,it] = clf.score(dataset_eval, classes_eval)
+                        accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
 
                 elif clf=='knn':
 
                         clf = skl.neighbors.KNeighborsClassifier(n_neighbors=n_neighbors)
                         clf.fit(dataset, classes)
 
-                        accuracies[a,part,it] = clf.score(dataset_eval, classes_eval)
-                        accuracies_also_valid[a,part,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
+                        accuracies[a,part,b,it] = clf.score(dataset_eval, classes_eval)
+                        accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
 
                 elif clf=='rf':
 
                         clf = skl.ensemble.RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
                         clf.fit(dataset, classes)
 
-                        accuracies[a,part,it] = clf.score(dataset_eval, classes_eval)
-                        accuracies_also_valid[a,part,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
+                        accuracies[a,part,b,it] = clf.score(dataset_eval, classes_eval)
+                        accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, clf.predict(dataset_eval))
 
                 elif clf=='xgboost':
 
                         model = xgb.XGBClassifier(**params)
                         model.fit(dataset, classes, eval_metric='merror')
 
-                        accuracies[a,part,it] = sklearn.metrics.accuracy_score(classes_eval, model.predict(dataset_eval))
-                        accuracies_also_valid[a,part,it] = also_valid_function(classes_eval_also_valid, model.predict(dataset_eval))
+                        accuracies[a,part,b,it] = sklearn.metrics.accuracy_score(classes_eval, model.predict(dataset_eval))
+                        accuracies_also_valid[a,part,b,it] = also_valid_function(classes_eval_also_valid, model.predict(dataset_eval))
+
+    np.save('../../results/' + mode + '/accuracies', accuracies)
+    np.save('../../results/' + mode + '/accuracies_also_valid', accuracies_also_valid)
                         
