@@ -30,7 +30,7 @@ min_acc = [0.42]
 
 # Data parameters
 
-frame_sizes = ['512','1024','2048']
+frame_sizes = ['1024']
 
 # Network parameters
 
@@ -46,8 +46,8 @@ batch_size = 512
 
 # Class weighting
 
-onset_loss_weight = 0.65
-nucleus_loss_weight = 0.35
+onset_loss_weight = 0.6
+nucleus_loss_weight = 0.4
 class_weight = {'onset': onset_loss_weight, 'nucleus': nucleus_loss_weight}
 
 # Normalisation values
@@ -393,5 +393,7 @@ for m in range(len(modes)):
             else:
                 np.save('../../data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_' + str(part), train_features)
                 np.save('../../data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_' + str(part), test_features)
+
+            tf.keras.backend.clear_session()
 
     np.save('validation_losses_' + mode, validation_losses_mode)

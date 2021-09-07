@@ -30,7 +30,7 @@ class MLP_Processed(tf.keras.Model):
                 tf.keras.layers.Dense(12),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Activation(activation='relu'),
-                tf.keras.layers.Dense(num_labels, activation='softmax'),
+                tf.keras.layers.Dense(num_labels, activation='softmax')
             ]
         )
 
@@ -62,15 +62,15 @@ if gpus:
 
 num_it = 10
 percentage_train = 70
-#modes = ['vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
-modes = ['vae','classall','classred','syllred','phonall','phonred']
-#clfs = ['mlp','logr','knn','rf','xgboost']
+modes = ['vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
+#modes = ['vae','syllall','phonall']
+#modes = ['vae','classall','classred','syllred','phonall','phonred']
+clfs = ['mlp','logr','knn','rf','xgboost']
 #clfs = ['logr','knn','rf','xgboost']
-clfs = ['logr','knn']
 
 # Data parameters
 
-frame_sizes = ['512','1024','2048']
+frame_sizes = ['1024']
 
 # Network parameters
 

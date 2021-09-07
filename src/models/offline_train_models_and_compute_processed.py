@@ -295,18 +295,20 @@ for m in range(len(modes)):
 
             if mode=='vae':
 
-                model = VAE_Interim(latent_dim)
+                while validation_losses_mode[a,part] > 0.003:
 
-                optimizer = tf.keras.optimizers.Adam(lr=1e-3)
-                early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
-                lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
+                    model = VAE_Interim(latent_dim)
 
-                with tf.device(gpu_name):
+                    optimizer = tf.keras.optimizers.Adam(lr=1e-3)
+                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
+                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
 
-                    model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError(), metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=False)
-                    history = model.fit(pretrain_dataset_train, pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_dataset_test), callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0)  # , verbose=0
-                    validation_losses_mode[a,part] = history.history['val_loss'][-10]
-                    print(validation_losses_mode[a,part])
+                    with tf.device(gpu_name):
+
+                        model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError(), metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=False)
+                        history = model.fit(pretrain_dataset_train, pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_dataset_test), callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0)  # , verbose=0
+                        validation_losses_mode[a,part] = history.history['val_loss'][-10]
+                        print(validation_losses_mode[a,part])
 
             elif 'phon' in mode:
 
@@ -392,5 +394,7 @@ for m in range(len(modes)):
             else:
                 np.save('../../data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_' + str(part), train_features)
                 np.save('../../data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_' + str(part), test_features)
+
+            tf.keras.backend.clear_session()
 
     np.save('validation_losses_' + mode, validation_losses_mode)

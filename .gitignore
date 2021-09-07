@@ -129,8 +129,5 @@ dmypy.json
 .pyre/
 
 # Folders
-data/external
-data/interim
-data/processed
-data/processed_7_sep
+data
 results
