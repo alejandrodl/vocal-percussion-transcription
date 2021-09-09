@@ -127,14 +127,6 @@ def Create_Phoneme_Labels(Onset_Phonemes, Nucleus_Phonemes):
     return Onset_Phonemes_Labels, Nucleus_Phonemes_Labels, Onset_Phonemes_Reduced_Labels, Nucleus_Phonemes_Reduced_Labels
 
 
-#def pitch_shift(data, sampling_rate, pitch_factor):
-    #return librosa.effects.pitch_shift(data, sampling_rate, pitch_factor)
-
-#def time_stretch(data, stretch_factor):
-    #return librosa.effects.time_stretch(data, stretch_factor)
-
-#def time_stretch(data, stretch_factor):
-    #return rubberband.stretch(data, rate=44100, ratio=stretch_factor, crispness=6, formants=False, precise=True)
     
 def pitch_shift(data, sampling_rate, pitch_semitones):
     return pyrb.pitch_shift(data, sampling_rate, pitch_semitones)
@@ -156,7 +148,7 @@ delta_bool = False
 
 # Create AVP Test Dataset
 
-path_audio = '../../data/external/AVP_Dataset/Personal'
+path_audio = 'data/external/AVP_Dataset/Personal'
 
 list_wav = []
 list_csv = []
@@ -238,36 +230,71 @@ for i in range(len(list_wav)):
                 print(list_wav[i])
 
             if i<=9:
-                np.save('../../data/interim/AVP/Dataset_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/AVP/Classes_Test_0' + str(i), Classes)
-                np.save('../../data/interim/AVP/Syll_Onset_Test_0' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Test_0' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/AVP/Syll_Onset_Reduced_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/AVP/Dataset_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/AVP/Classes_Test_0' + str(i), Classes)
+                np.save('data/interim/AVP/Syll_Onset_Test_0' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/AVP/Syll_Nucleus_Test_0' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
             else:
-                np.save('../../data/interim/AVP/Dataset_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/AVP/Classes_Test_' + str(i), Classes)
-                np.save('../../data/interim/AVP/Syll_Onset_Test_' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Test_' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/AVP/Syll_Onset_Reduced_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/AVP/Dataset_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/AVP/Classes_Test_' + str(i), Classes)
+                np.save('data/interim/AVP/Syll_Onset_Test_' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/AVP/Syll_Nucleus_Test_' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
+
+
+        
+# Create AVP Test Dataset Audio
+
+path_audio = 'data/external/AVP_Dataset/Personal'
+
+list_wav = []
+list_csv = []
+
+for path, subdirs, files in os.walk(path_audio):
+    for filename in files:
+        if filename.endswith('.wav'):
+            list_wav.append(os.path.join(path, filename))
+        if filename.endswith('.csv'):
+            list_csv.append(os.path.join(path, filename))
+
+list_wav = sorted(list_wav)
+list_csv = sorted(list_csv)
+
+list_wav.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+list_csv.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+
+list_wav = list_wav[2::5]
+list_csv = list_csv[2::5]
+
+for i in range(len(list_wav)):
+
+    onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
+
+    audio, fs = librosa.load(list_wav[i], sr=44100)
+    audio = audio/np.max(abs(audio))
+
+    onsets_samples = onsets*fs
+    onsets_samples = onsets_samples.astype(int)
             
-    #audio = np.concatenate((audio,np.zeros(4096)))
+    audio = np.concatenate((audio,np.zeros(4096)))
 
-    #audios_all = []
-    #for osm in range(len(onsets_samples)-1):
-        #audios_all.append(audio[onsets_samples[osm]:onsets_samples[osm+1]])
-    #audios_all.append(audio[onsets_samples[osm+1]:])
+    audios_all = []
+    for osm in range(len(onsets_samples)-1):
+        audios_all.append(audio[onsets_samples[osm]:onsets_samples[osm+1]])
+    audios_all.append(audio[onsets_samples[osm+1]:])
 
-    #if i<=9:
-        #np.save('../../data/interim/AVP/Dataset_Test_Audio_0' + str(i), np.array(audios_all))
-    #else:
-        #np.save('../../data/interim/AVP/Dataset_Test_Audio_' + str(i), np.array(audios_all))
+    if i<=9:
+        np.save('data/external/AVP_Dataset_Audio/Dataset_Test_0' + str(i), np.array(audios_all))
+    else:
+        np.save('data/external/AVP_Dataset_Audio/Dataset_Test_' + str(i), np.array(audios_all))
 
-    #if i==0:
-        #for pl in range(10):
-            #plt.figure()
-            #plt.plot(np.array(audios_all[pl]))
+    if i==0:
+        for pl in range(10):
+            plt.figure()
+            plt.plot(np.array(audios_all[pl]))
 
 
 
@@ -276,7 +303,7 @@ for i in range(len(list_wav)):
 pitch = [-1,1]
 times = [0.85,1.15]
 
-path_audio = '../../data/external/AVP_Dataset/Personal'
+path_audio = 'data/external/AVP_Dataset/Personal'
 
 list_wav = []
 list_csv = []
@@ -400,30 +427,27 @@ for i in range(len(list_wav)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:]
             
             if i<=9:
-                np.save('../../data/interim/AVP/Dataset_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/AVP/Classes_Test_Aug_0' + str(i), Classes_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Reduced_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Dataset_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/AVP/Classes_Test_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/AVP/Syll_Onset_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/AVP/Dataset_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/AVP/Classes_Test_Aug_' + str(i), Classes_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Reduced_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Dataset_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/AVP/Classes_Test_Aug_' + str(i), Classes_All)
+                np.save('data/interim/AVP/Syll_Onset_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
 # Create Train Aug Dataset
 
-pitch = [-1,1]
-times = [0.85,1.15]
-
 fs = 44100
 
-path_audio = '../../data/external/AVP_Dataset/Personal'
+path_audio = 'data/external/AVP_Dataset/Personal'
 
 list_wav_all = []
 list_csv_all = []
@@ -476,8 +500,6 @@ for j in range(len(num_specs)):
 
                 onsets_samples = onsets*fs
                 onsets_ref = onsets_samples.astype(int)
-                
-                #audios_all = []
                 
                 for k in range(10):
 
@@ -554,12 +576,6 @@ for j in range(len(num_specs)):
                     else:
                         print(list_num)
                         print(list_wav[i])
-                    
-                    #audio = np.concatenate((audio,np.zeros(4096)))
-            
-                    #for osm in range(len(onsets)-1):
-                        #audios_all.append(audio[onsets[osm]:onsets[osm+1]])
-                    #audios_all.append(audio[onsets[osm+1]:])
 
             Spec_Matrix_All = Spec_Matrix_All[1:]
             Classes_All = Classes_All[1:]
@@ -569,24 +585,96 @@ for j in range(len(num_specs)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:]       
 
             if part<=9:
-                np.save('../../data/interim/AVP/Dataset_Train_Aug_0' + str(part) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/AVP/Classes_Train_Aug_0' + str(part), Classes_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Train_Aug_0' + str(part), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(part), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(part), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Dataset_Train_Aug_0' + str(part) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/AVP/Classes_Train_Aug_0' + str(part), Classes_All)
+                np.save('data/interim/AVP/Syll_Onset_Train_Aug_0' + str(part), Onset_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(part), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(part), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/AVP/Dataset_Train_Aug_' + str(part) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/AVP/Classes_Train_Aug_' + str(part), Classes_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Train_Aug_' + str(part), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(part), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(part), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Dataset_Train_Aug_' + str(part) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/AVP/Classes_Train_Aug_' + str(part), Classes_All)
+                np.save('data/interim/AVP/Syll_Onset_Train_Aug_' + str(part), Onset_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(part), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(part), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
 
-            #if i<=9:
-                #np.save('../../data/interim/AVP_Audio/Dataset_Train_0' + str(part), np.array(audios_all))
-            #else:
-                #np.save('../../data/interim/AVP_Audio/Dataset_Train_' + str(part), np.array(audios_all))
+
+
+
+# Create Train Aug Dataset Audio
+
+fs = 44100
+
+path_audio = 'data/external/AVP_Dataset/Personal'
+
+list_wav_all = []
+list_csv_all = []
+
+for path, subdirs, files in os.walk(path_audio):
+    for filename in files:
+        if filename.endswith('.wav'):
+            list_wav_all.append(os.path.join(path, filename))
+        if filename.endswith('.csv'):
+            list_csv_all.append(os.path.join(path, filename))
+
+list_wav_all = sorted(list_wav_all)
+list_csv_all = sorted(list_csv_all)
+
+list_wav_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+list_csv_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+
+list_wav = list_wav_all[::5] + list_wav_all[1::5] + list_wav_all[3::5] + list_wav_all[4::5]
+list_csv = list_csv_all[::5] + list_csv_all[1::5] + list_csv_all[3::5] + list_csv_all[4::5]
+
+list_wav_all = sorted(list_wav)
+list_csv_all = sorted(list_csv)
+
+list_wav_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+list_csv_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+  
+for part in range(28):
+
+    audios_all = []
+
+    for i in range(4):
+
+        onsets = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=0)
+
+        audio, fs = librosa.load(list_wav_all[4*part+i], sr=44100)
+        audio_ref = audio/np.max(abs(audio))
+
+        onsets_samples = onsets*fs
+        onsets_ref = onsets_samples.astype(int)
+        
+        for k in range(10):
+
+            kn = np.random.randint(0,2)
+            pt = np.random.uniform(low=-1.5, high=1.5, size=None)
+            st = np.random.uniform(low=0.8, high=1.2, size=None)
+
+            if kn==0:
+                audio = pitch_shift(audio_ref, fs, pt)
+                audio = time_stretch(audio, st)
+                onsets = onsets_ref/st
+                onsets = onsets.astype(int)
+            elif kn==1:
+                audio = time_stretch(audio_ref, st)
+                audio = pitch_shift(audio, fs, pt)
+                onsets = onsets_ref/st
+                onsets = onsets.astype(int)
+
+            audio = np.concatenate((audio,np.zeros(4096)))
+    
+            for osm in range(len(onsets)-1):
+                audios_all.append(audio[onsets[osm]:onsets[osm+1]])
+            audios_all.append(audio[onsets[osm+1]:])
+
+    if part<=9:
+        np.save('data/external/AVP_Dataset_Audio/Dataset_Train_0' + str(part), np.array(audios_all))
+    else:
+        np.save('data/external/AVP_Dataset_Audio/Dataset_Train_' + str(part), np.array(audios_all))
+
 
 
 
@@ -594,7 +682,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT1'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -658,11 +746,11 @@ for j in range(len(num_specs)):
                     count += 1
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_1_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_1_Train_0' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_1_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_1_Train_0' + str(i), Classes)
             else:
-                np.save('../../data/interim/LVT/Dataset_1_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_1_Train_' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_1_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_1_Train_' + str(i), Classes)
 
 
 
@@ -672,7 +760,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT1'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -736,11 +824,11 @@ for j in range(len(num_specs)):
                     count += 1
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_1_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_1_Train_0' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_1_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_1_Train_0' + str(i), Classes)
             else:
-                np.save('../../data/interim/LVT/Dataset_1_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_1_Train_' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_1_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_1_Train_' + str(i), Classes)
 
 
 
@@ -750,7 +838,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT2'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -814,11 +902,11 @@ for j in range(len(num_specs)):
                     count += 1
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_2_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_2_Train_0' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_2_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_2_Train_0' + str(i), Classes)
             else:
-                np.save('../../data/interim/LVT/Dataset_2_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_2_Train_' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_2_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_2_Train_' + str(i), Classes)
 
 
 
@@ -828,7 +916,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT3'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -892,11 +980,11 @@ for j in range(len(num_specs)):
                     count += 1
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_3_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_3_Train_0' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_3_Train_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_3_Train_0' + str(i), Classes)
             else:
-                np.save('../../data/interim/LVT/Dataset_3_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_3_Train_' + str(i), Classes)
+                np.save('data/interim/LVT/Dataset_3_Train_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_3_Train_' + str(i), Classes)
 
 
 
@@ -906,7 +994,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT1'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -974,19 +1062,19 @@ for j in range(len(num_specs)):
                     count += 1
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_1_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_1_Test_0' + str(i), Classes)
-                np.save('../../data/interim/LVT/Syll_Onset_1_Test_0' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_1_Test_0' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_1_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_1_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Dataset_1_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_1_Test_0' + str(i), Classes)
+                np.save('data/interim/LVT/Syll_Onset_1_Test_0' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_1_Test_0' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_1_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_1_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
             else:
-                np.save('../../data/interim/LVT/Dataset_1_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_1_Test_' + str(i), Classes)
-                np.save('../../data/interim/LVT/Syll_Onset_1_Test_' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_1_Test_' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_1_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_1_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Dataset_1_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_1_Test_' + str(i), Classes)
+                np.save('data/interim/LVT/Syll_Onset_1_Test_' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_1_Test_' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_1_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_1_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
 
 
 
@@ -995,7 +1083,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT2'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1063,19 +1151,19 @@ for j in range(len(num_specs)):
                     count += 1
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_2_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_2_Test_0' + str(i), Classes)
-                np.save('../../data/interim/LVT/Syll_Onset_2_Test_0' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_2_Test_0' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_2_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_2_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Dataset_2_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_2_Test_0' + str(i), Classes)
+                np.save('data/interim/LVT/Syll_Onset_2_Test_0' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_2_Test_0' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_2_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_2_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
             else:
-                np.save('../../data/interim/LVT/Dataset_2_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_2_Test_' + str(i), Classes)
-                np.save('../../data/interim/LVT/Syll_Onset_2_Test_' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_2_Test_' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_2_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_2_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Dataset_2_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_2_Test_' + str(i), Classes)
+                np.save('data/interim/LVT/Syll_Onset_2_Test_' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_2_Test_' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_2_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_2_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
 
 
 
@@ -1085,7 +1173,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT3'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1153,19 +1241,19 @@ for j in range(len(num_specs)):
                     count += 1
                 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_3_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_3_Test_0' + str(i), Classes)
-                np.save('../../data/interim/LVT/Syll_Onset_3_Test_0' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_3_Test_0' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_3_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_3_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Dataset_3_Test_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_3_Test_0' + str(i), Classes)
+                np.save('data/interim/LVT/Syll_Onset_3_Test_0' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_3_Test_0' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_3_Test_0' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_3_Test_0' + str(i), Nucleus_Phonemes_Reduced_Labels)
             else:
-                np.save('../../data/interim/LVT/Dataset_3_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/LVT/Classes_3_Test_' + str(i), Classes)
-                np.save('../../data/interim/LVT/Syll_Onset_3_Test_' + str(i), Onset_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_3_Test_' + str(i), Nucleus_Phonemes_Labels)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_3_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_3_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Dataset_3_Test_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/LVT/Classes_3_Test_' + str(i), Classes)
+                np.save('data/interim/LVT/Syll_Onset_3_Test_' + str(i), Onset_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_3_Test_' + str(i), Nucleus_Phonemes_Labels)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_3_Test_' + str(i), Onset_Phonemes_Reduced_Labels)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_3_Test_' + str(i), Nucleus_Phonemes_Reduced_Labels)
 
 
 
@@ -1175,7 +1263,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT1'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1282,19 +1370,19 @@ for j in range(len(num_specs)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:]   
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_1_Train_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_1_Train_Aug_0' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_1_Train_Aug_0' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_1_Train_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_1_Train_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_1_Train_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_1_Train_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_1_Train_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_1_Train_Aug_0' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_1_Train_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_1_Train_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_1_Train_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/LVT/Dataset_1_Train_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_1_Train_Aug_' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_1_Train_Aug_' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_1_Train_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_1_Train_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_1_Train_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_1_Train_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_1_Train_Aug_' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_1_Train_Aug_' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_1_Train_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_1_Train_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_1_Train_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
@@ -1304,7 +1392,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT2'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1411,19 +1499,19 @@ for j in range(len(num_specs)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:] 
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_2_Train_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_2_Train_Aug_0' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_2_Train_Aug_0' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_2_Train_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_2_Train_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_2_Train_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_2_Train_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_2_Train_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_2_Train_Aug_0' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_2_Train_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_2_Train_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_2_Train_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/LVT/Dataset_2_Train_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_2_Train_Aug_' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_2_Train_Aug_' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_2_Train_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_2_Train_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_2_Train_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_2_Train_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_2_Train_Aug_' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_2_Train_Aug_' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_2_Train_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_2_Train_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_2_Train_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
@@ -1433,7 +1521,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT3'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1540,19 +1628,19 @@ for j in range(len(num_specs)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:] 
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_3_Train_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_3_Train_Aug_0' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_3_Train_Aug_0' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_3_Train_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_3_Train_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_3_Train_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_3_Train_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_3_Train_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_3_Train_Aug_0' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_3_Train_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_3_Train_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_3_Train_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/LVT/Dataset_3_Train_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_3_Train_Aug_' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_3_Train_Aug_' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_3_Train_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_3_Train_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_3_Train_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_3_Train_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_3_Train_Aug_' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_3_Train_Aug_' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_3_Train_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_3_Train_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_3_Train_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
@@ -1562,7 +1650,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT1'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1669,19 +1757,19 @@ for j in range(len(num_specs)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:] 
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_1_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_1_Test_Aug_0' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_1_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_1_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_1_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_1_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_1_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_1_Test_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_1_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_1_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_1_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_1_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/LVT/Dataset_1_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_1_Test_Aug_' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_1_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_1_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_1_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_1_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_1_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_1_Test_Aug_' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_1_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_1_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_1_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_1_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
@@ -1691,7 +1779,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT2'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1798,19 +1886,19 @@ for j in range(len(num_specs)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:] 
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_2_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_2_Test_Aug_0' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_2_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_2_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_2_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_2_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_2_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_2_Test_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_2_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_2_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_2_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_2_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/LVT/Dataset_2_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_2_Test_Aug_' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_2_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_2_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_2_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_2_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_2_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_2_Test_Aug_' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_2_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_2_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_2_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_2_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
@@ -1820,7 +1908,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'LVT3'
 
-path_audio = '../../data/external/LVT_Dataset/DataSet_Wav_Annotation'
+path_audio = 'data/external/LVT_Dataset/DataSet_Wav_Annotation'
 
 list_wav = []
 list_csv = []
@@ -1927,19 +2015,19 @@ for j in range(len(num_specs)):
             Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:] 
 
             if i<=9:
-                np.save('../../data/interim/LVT/Dataset_3_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_3_Test_Aug_0' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_3_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_3_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_3_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_3_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_3_Test_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_3_Test_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_3_Test_Aug_0' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_3_Test_Aug_0' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_3_Test_Aug_0' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_3_Test_Aug_0' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
             else:
-                np.save('../../data/interim/LVT/Dataset_3_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/LVT/Classes_3_Test_Aug_' + str(i), Classes_All)
-                np.save('../../data/interim/LVT/Syll_Onset_3_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_3_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Onset_Reduced_3_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
-                np.save('../../data/interim/LVT/Syll_Nucleus_Reduced_3_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Dataset_3_Test_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/LVT/Classes_3_Test_Aug_' + str(i), Classes_All)
+                np.save('data/interim/LVT/Syll_Onset_3_Test_Aug_' + str(i), Onset_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_3_Test_Aug_' + str(i), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/LVT/Syll_Onset_Reduced_3_Test_Aug_' + str(i), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/LVT/Syll_Nucleus_Reduced_3_Test_Aug_' + str(i), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
@@ -1950,7 +2038,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'BTX'
 
-path_audio = '../../data/external/Beatbox_Set'
+path_audio = 'data/external/Beatbox_Set'
 
 list_wav = []
 list_csv_1 = []
@@ -2035,11 +2123,11 @@ for j in range(len(num_specs)):
             Spec_Matrix = Spec_Matrix[1:]
 
             if i<=9:
-                np.save('../../data/interim/BTX/Dataset_BTX_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/BTX/Classes_BTX_0' + str(i), Classes_Select)
+                np.save('data/interim/BTX/Dataset_BTX_0' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/BTX/Classes_BTX_0' + str(i), Classes_Select)
             else:
-                np.save('../../data/interim/BTX/Dataset_BTX_' + str(i) + '_' + str(frame_size), Spec_Matrix)
-                np.save('../../data/interim/BTX/Classes_BTX_' + str(i), Classes_Select)
+                np.save('data/interim/BTX/Dataset_BTX_' + str(i) + '_' + str(frame_size), Spec_Matrix)
+                np.save('data/interim/BTX/Classes_BTX_' + str(i), Classes_Select)
 
 
 
@@ -2047,7 +2135,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'BTX_Aug'
 
-path_audio = '../../data/external/Beatbox_Set'
+path_audio = 'data/external/Beatbox_Set'
 
 list_wav = []
 list_csv_1 = []
@@ -2162,11 +2250,11 @@ for j in range(len(num_specs)):
             Classes_All = Classes_All[1:]
 
             if i<=9:
-                np.save('../../data/interim/BTX/Dataset_BTX_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/BTX/Classes_BTX_Aug_0' + str(i), Classes_All)
+                np.save('data/interim/BTX/Dataset_BTX_Aug_0' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/BTX/Classes_BTX_Aug_0' + str(i), Classes_All)
             else:
-                np.save('../../data/interim/BTX/Dataset_BTX_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
-                np.save('../../data/interim/BTX/Classes_BTX_Aug_' + str(i), Classes_All)
+                np.save('data/interim/BTX/Dataset_BTX_Aug_' + str(i) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/BTX/Classes_BTX_Aug_' + str(i), Classes_All)
 
 
 
@@ -2176,7 +2264,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'VIM_Percussive_Aug'
 
-path_audio = '../../data/external/VIM_Percussive_Dataset'
+path_audio = 'data/external/VIM_Percussive_Dataset'
 
 list_wav = []
 list_csv = []
@@ -2272,7 +2360,7 @@ for j in range(len(num_specs)):
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
-        np.save('../../data/interim/VIM/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
+        np.save('data/interim/VIM/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
 
 
 
@@ -2281,7 +2369,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'AVP_Fixed_Small_Aug'
 
-path_audio = '../../data/external/AVP_Dataset/Fixed'
+path_audio = 'data/external/AVP_Dataset/Fixed'
 
 list_wav = []
 list_csv = []
@@ -2372,7 +2460,7 @@ for j in range(len(num_specs)):
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
-        np.save('../../data/interim/AVP/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
+        np.save('data/interim/AVP/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
 
 
 
@@ -2382,7 +2470,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'FSB_Multi_Aug'
 
-path_audio = '../../data/external/FSB_Dataset/Multi'
+path_audio = 'data/external/FSB_Dataset/Multi'
 
 list_wav = []
 list_csv = []
@@ -2478,7 +2566,7 @@ for j in range(len(num_specs)):
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
-        np.save('../../data/interim/FSB/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
+        np.save('data/interim/FSB/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
 
 
 
@@ -2488,7 +2576,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'FSB_Single_Aug'
 
-path_audio = '../../data/external/FSB_Dataset/Single'
+path_audio = 'data/external/FSB_Dataset/Single'
 
 list_wav = []
 list_csv = []
@@ -2554,7 +2642,7 @@ for j in range(len(num_specs)):
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
-        np.save('../../data/interim/FSB/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
+        np.save('data/interim/FSB/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
 
 
 
@@ -2563,7 +2651,7 @@ for j in range(len(num_specs)):
 
 Dataset_Str = 'Zhu_Aug'
 
-path_audio = '../../data/external/Beatbox_Zhu'
+path_audio = 'data/external/Beatbox_Zhu'
 
 list_wav = []
 list_csv = []
@@ -2621,4 +2709,4 @@ for j in range(len(num_specs)):
 
         Spec_Matrix_All = Spec_Matrix_All[1:]
 
-        np.save('../../data/interim/ZHU/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)
+        np.save('data/interim/ZHU/Dataset_' + Dataset_Str + '_' + str(frame_size), Spec_Matrix_All)

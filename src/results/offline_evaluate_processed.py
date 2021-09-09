@@ -1,5 +1,6 @@
 import os
 import sys
+import pdb
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -62,11 +63,10 @@ if gpus:
 
 num_it = 10
 percentage_train = 70
-modes = ['vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
-#modes = ['vae','syllall','phonall']
-#modes = ['vae','classall','classred','syllred','phonall','phonred']
-clfs = ['mlp','logr','knn','rf','xgboost']
-#clfs = ['logr','knn','rf','xgboost']
+modes = ['eng_mfcc_env','vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
+#modes = ['eng_mfcc_env']
+#clfs = ['mlp','logr','knn','rf','xgboost']
+clfs = ['logr']
 
 # Data parameters
 
@@ -184,8 +184,19 @@ for mode in modes:
                 dataset = np.load('data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
                 dataset_eval = np.load('data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
             
-            dataset = dataset-np.mean(np.vstack((dataset,dataset_eval)))/np.std(np.vstack((dataset,dataset_eval)))
-            dataset_eval = dataset_eval-np.mean(np.vstack((dataset,dataset_eval)))/np.std(np.vstack((dataset,dataset_eval)))
+            #if modes=='eng_mfcc_env':
+            for feat in range(dataset.shape[-1]):
+                #mean = np.mean(np.concatenate((dataset[:,feat],dataset_eval[:,feat])))
+                #std = np.std(np.concatenate((dataset[:,feat],dataset_eval[:,feat])))
+                mean = np.mean(dataset[:,feat])
+                std = np.std(dataset[:,feat])
+                dataset[:,feat] = (dataset[:,feat]-mean)/std
+                dataset_eval[:,feat] = (dataset_eval[:,feat]-mean)/std
+
+            #mean = np.mean(np.vstack((dataset,dataset_eval)))
+            #std = np.std(np.vstack((dataset,dataset_eval)))
+            #dataset = (dataset-mean)/std
+            #dataset_eval = (dataset_eval-mean)/std
 
             np.random.seed(0)
             np.random.shuffle(dataset)

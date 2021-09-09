@@ -190,3 +190,49 @@ def CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr) -> tf.keras.Mod
                         "nucleus":tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)})
     
     return model
+
+
+
+class CNN_Interim_Siamese(tf.keras.Model):
+
+    def __init__(self, num_labels, latent_dim):
+        super(CNN_Interim_Siamese, self).__init__()
+        self.cnn = tf.keras.Sequential(
+            [
+                tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
+                tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
+                tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
+                tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
+                tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
+                tf.keras.layers.Flatten(),
+                tf.keras.layers.Dense(latent_dim)
+            ]
+        )
+
+    def call(self, x):
+
+        cutoff = tf.shape(x)[2]
+
+        x_1 = x[:,:,:cutoff,:]
+        x_2 = x[:,:,cutoff:,:]
+
+        out_1 = self.cnn(x_1)
+        out_2 = self.cnn(x_2)
+
+        return out_1, out_2
