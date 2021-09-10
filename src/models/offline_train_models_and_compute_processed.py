@@ -25,12 +25,13 @@ if gpus:
 # Global parameters
 
 percentage_train = 85
-modes = ['vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
-min_acc = [0.53,0.66,0.3,0.35,0.4,0.45]
+#modes = ['vae','classall','classred','syllall','syllred','phonall','phonred']
+modes = ['siamese']
+min_acc = [0.53,0.66,0.3,0.35,0.5,0.55]
 
 # Data parameters
 
-frame_sizes = ['512','1024','2048']
+frame_sizes = ['1024']
 
 # Network parameters
 
@@ -78,7 +79,7 @@ for m in range(len(modes)):
             print([mode,frame_size,part])
             print('\n')
 
-            # Load and process spectrograms
+            # Spectrogram loading
 
             pretrain_dataset = np.zeros((1, 64, 64))
             for n in range(28):
@@ -93,9 +94,13 @@ for m in range(len(modes)):
                         pretrain_dataset = np.vstack((pretrain_dataset, np.load('../../data/interim/AVP/Dataset_Test_Aug_' + str(n) + '_' + frame_size + '.npy')))
             pretrain_dataset = pretrain_dataset[1:]
 
+            # Spectrogram normalisation
+
             pretrain_dataset = (pretrain_dataset-norm_min_max_1[a][0])/(norm_min_max_1[a][1]-norm_min_max_1[a][0]+1e-16)
             pretrain_dataset = np.log(pretrain_dataset+1e-4)
             pretrain_dataset = (pretrain_dataset-norm_min_max_2[a][0])/(norm_min_max_2[a][1]-norm_min_max_2[a][0]+1e-16)
+
+            # Data preparation
 
             cutoff_train = int((percentage_train/100)*pretrain_dataset.shape[0])
             pretrain_dataset_train = pretrain_dataset[:cutoff_train]
@@ -238,6 +243,54 @@ for m in range(len(modes)):
 
                 num_classes = np.max(classes)+1
 
+            elif 'siamese' in mode:
+
+                classes = np.zeros(1)
+
+                for n in range(28):
+                    if n==part:
+                        continue
+                    else:
+                        classes_pre_siamese = np.zeros(1)
+                        pretrain_dataset = np.zeros((1, 64, 64))
+                        if n<=9:
+                            pretrain_dataset = np.vstack((pretrain_dataset, np.load('../../data/interim/AVP/Dataset_Train_Aug_0' + str(n) + '_' + frame_size + '.npy')))
+                            classes_str = np.load('../../data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')
+                            classes_pre = np.zeros(len(classes_str))
+                            for n in range(len(classes_str)):
+                                if classes_str[n]=='kd':
+                                    classes_pre_siamese[n] = (part*4)
+                                elif classes_str[n]=='sd':
+                                    classes_pre_siamese[n] = (part*4)+1
+                                elif classes_str[n]=='hhc':
+                                    classes_pre_siamese[n] = (part*4)+2
+                                elif classes_str[n]=='hho':
+                                    classes_pre_siamese[n] = (part*4)+3
+                            classes_pre_siamese = np.vstack((classes_pre_siamese, classes_pre))
+                        else:
+                            pretrain_dataset = np.vstack((pretrain_dataset, np.load('../../data/interim/AVP/Dataset_Train_Aug_' + str(n) + '_' + frame_size + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                            classes_pre = np.zeros(len(classes_str))
+                            for n in range(len(classes_str)):
+                                if classes_str[n]=='kd':
+                                    classes_pre_siamese[n] = (part*4)
+                                elif classes_str[n]=='sd':
+                                    classes_pre_siamese[n] = (part*4)+1
+                                elif classes_str[n]=='hhc':
+                                    classes_pre_siamese[n] = (part*4)+2
+                                elif classes_str[n]=='hho':
+                                    classes_pre_siamese[n] = (part*4)+3
+                            classes_pre_siamese = np.vstack((classes_pre_siamese, classes_pre))
+                        classes_str = classes_str[1:]
+                        pretrain_dataset = pretrain_dataset[1:]
+
+                
+
+                                
+
+
+                num_classes = np.max(classes)+1
+
             if 'syll' in mode:
 
                 combinations = []
@@ -316,13 +369,13 @@ for m in range(len(modes)):
 
                     model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=3*1e-4)
 
-                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_onset_accuracy', patience=patience_early)
+                    early_stopping = EarlyStopping_Phoneme(patience=patience_early)
                     lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_onset_accuracy', patience=patience_lr)
 
                     with tf.device(gpu_name):
 
                         history = model.fit(pretrain_dataset_train, [pretrain_classes_train_onset, pretrain_classes_train_nucleus], batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,[pretrain_classes_test_onset,pretrain_classes_test_nucleus]), callbacks=[early_stopping,lr_scheduler], class_weight=class_weight, shuffle=True, verbose=0)  # , verbose=0
-                        validation_losses_mode[a,part] = history.history['val_onset_accuracy'][-10]
+                        validation_losses_mode[a,part] = (history.history['val_onset_accuracy'][-10]+history.history['val_nucleus_accuracy'][-10])/2
                         print(validation_losses_mode[a,part])
 
             else:
@@ -348,6 +401,8 @@ for m in range(len(modes)):
                 model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + frame_size + '_' + str(part) + '.h5')
 
             # Compute processed features
+
+            print('Computing features...')
 
             if part<=9:
                 train_dataset = np.load('../../data/interim/AVP/Dataset_Train_Aug_0' + str(part) + '_' + frame_size + '.npy')

@@ -15,7 +15,8 @@ from sklearn.metrics import accuracy_score
 # Global parameters
 
 percentage_train = 80
-modes = ['classall','classred','syllall','syllred','phonall','phonred']
+#modes = ['classall','classred','syllall','syllred','phonall','phonred']
+modes = ['phonall','phonred']
 mode_feat = 'eng_all'
 
 # Data parameters
@@ -257,18 +258,18 @@ for m in range(len(modes)):
             np.save('data/processed/' + mode + '/indices_sorted_onset_eng_' + mode, indices_sorted)
             np.save('data/processed/' + mode + '/importances_sorted_onset_eng_' + mode, importances_sorted)
 
-            print('Calculating nucleus importances...')
+            #print('Calculating nucleus importances...')
 
-            forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+            #forest = RandomForestClassifier(n_estimators=1000,random_state=0)
 
-            forest.fit(dataset_train, classes_train_nucleus)
-            results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=10, random_state=0)
+            #forest.fit(dataset_train, classes_train_nucleus)
+            #results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=10, random_state=0)
 
-            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-            importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+            #indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+            #importances_sorted = sorted(np.array(results.importances_mean))[::-1]
 
-            np.save('data/processed/' + mode + '/indices_sorted_onset_eng_' + mode, indices_sorted)
-            np.save('data/processed/' + mode + '/importances_sorted_onset_eng_' + mode, importances_sorted)
+            #np.save('data/processed/' + mode + '/indices_sorted_nucleus_eng_' + mode, indices_sorted)
+            #np.save('data/processed/' + mode + '/importances_sorted_nucleus_eng_' + mode, importances_sorted)
 
         elif 'class' in mode:
 

@@ -20,6 +20,22 @@ from sklearn.metrics import accuracy_score
 
 
 
+class SLP_Processed(tf.keras.Model):
+
+    def __init__(self, num_labels, input_length):
+        super(SLP_Processed, self).__init__()
+        self.encoder = tf.keras.Sequential(
+            [
+                tf.keras.layers.InputLayer(input_shape=(input_length, 1)),
+                tf.keras.layers.Flatten(),
+                tf.keras.layers.Dense(num_labels, activation='softmax')
+            ]
+        )
+
+    def call(self, x):
+        out = self.encoder(x)
+        return out
+
 class MLP_Processed(tf.keras.Model):
 
     def __init__(self, num_labels, input_length):
@@ -63,10 +79,10 @@ if gpus:
 
 num_it = 10
 percentage_train = 70
-modes = ['eng_mfcc_env','vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
-#modes = ['eng_mfcc_env']
-#clfs = ['mlp','logr','knn','rf','xgboost']
-clfs = ['logr']
+modes = ['eng_mfcc_env','eng_all_classall','eng_all_classred','eng_all_syllall','eng_all_syllred','eng_all_phonall','eng_all_phonred',
+         'vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
+#clfs = ['slp','mlp','logr','knn','rf','xgboost']
+clfs = ['knn']
 
 # Data parameters
 
@@ -177,26 +193,54 @@ for mode in modes:
                 elif classes_str[n]=='hho':
                     classes[n] = 3
 
-            if part<=9:
-                dataset = np.load('data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_0' + str(part) + '.npy')
-                dataset_eval = np.load('data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_0' + str(part) + '.npy')
+            if 'eng_all' not in mode:
+
+                if part<=9:
+                    dataset = np.load('data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_0' + str(part) + '.npy')
+                    dataset_eval = np.load('data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_0' + str(part) + '.npy')
+                else:
+                    dataset = np.load('data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
+                    dataset_eval = np.load('data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
+
             else:
-                dataset = np.load('data/processed/' + mode + '/train_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
-                dataset_eval = np.load('data/processed/' + mode + '/test_features_' + mode + '_' + frame_size + '_' + str(part) + '.npy')
+
+                if part<=9:
+                    dataset = np.load('data/processed/' + mode[:7] + '/train_features_' + mode[:7] + '_' + frame_size + '_0' + str(part) + '.npy')
+                    dataset_eval = np.load('data/processed/' + mode[:7] + '/test_features_' + mode[:7] + '_' + frame_size + '_0' + str(part) + '.npy')
+                else:
+                    dataset = np.load('data/processed/' + mode[:7] + '/train_features_' + mode[:7] + '_' + frame_size + '_' + str(part) + '.npy')
+                    dataset_eval = np.load('data/processed/' + mode[:7] + '/test_features_' + mode[:7] + '_' + frame_size + '_' + str(part) + '.npy')
+
+                if 'phon' not in mode:
+
+                    indices_selected = np.load('data/processed/' + mode[8:] + '/indices_sorted_eng_' + mode[8:] + '.npy')[:latent_dim]
+                    indices_selected = indices_selected.tolist()
+                    
+                    dataset = dataset[:,indices_selected]
+                    dataset_eval = dataset_eval[:,indices_selected]
+
+                else:
+
+                    indices_onset_selected = np.load('data/processed/' + mode[8:] + '/indices_sorted_onset_eng_' + mode[8:] + '.npy')
+                    indices_onset_selected = indices_onset_selected.tolist()
+
+                    indices_nucleus_selected = np.load('data/processed/' + mode[8:] + '/indices_sorted_nucleus_eng_' + mode[8:] + '.npy')
+                    indices_nucleus_selected = indices_nucleus_selected.tolist()
+
+                    cutoff = 32
+                    indices_selected = []
+                    while len(indices_selected)!=latent_dim:
+                        indices_selected = list(set(indices_onset_selected[:cutoff])&set(indices_nucleus_selected[:cutoff]))
+                        cutoff += 1
+                    
+                    dataset = dataset[:,indices_selected]
+                    dataset_eval = dataset_eval[:,indices_selected]
             
-            #if modes=='eng_mfcc_env':
             for feat in range(dataset.shape[-1]):
-                #mean = np.mean(np.concatenate((dataset[:,feat],dataset_eval[:,feat])))
-                #std = np.std(np.concatenate((dataset[:,feat],dataset_eval[:,feat])))
                 mean = np.mean(dataset[:,feat])
                 std = np.std(dataset[:,feat])
-                dataset[:,feat] = (dataset[:,feat]-mean)/std
-                dataset_eval[:,feat] = (dataset_eval[:,feat]-mean)/std
-
-            #mean = np.mean(np.vstack((dataset,dataset_eval)))
-            #std = np.std(np.vstack((dataset,dataset_eval)))
-            #dataset = (dataset-mean)/std
-            #dataset_eval = (dataset_eval-mean)/std
+                dataset[:,feat] = (dataset[:,feat]-mean)/(std+1e-16)
+                dataset_eval[:,feat] = (dataset_eval[:,feat]-mean)/(std+1e-16)
 
             np.random.seed(0)
             np.random.shuffle(dataset)
@@ -215,7 +259,7 @@ for mode in modes:
 
                 clf = clfs[b]
 
-                if clf=='mlp':
+                if clf=='slp' or clf=='mlp':
 
                     train_classes = classes[:cutoff_train]
                     val_classes = classes[cutoff_train:]
@@ -233,7 +277,10 @@ for mode in modes:
                         
                         with tf.device(gpu_name):
 
-                            model = MLP_Processed(np.max(classes)+1, latent_dim)
+                            if clf=='slp':
+                                model = SLP_Processed(np.max(classes)+1, latent_dim)
+                            else:
+                                model = MLP_Processed(np.max(classes)+1, latent_dim)
 
                             optimizer = tf.keras.optimizers.Adam(lr)
                             early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0, patience=patience_early, verbose=0, mode='auto', baseline=None, restore_best_weights=True)

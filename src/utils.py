@@ -16,6 +16,43 @@ import tensorflow_probability as tfp
 
 
 
+class EarlyStopping_Phoneme(keras.callbacks.Callback):
+    def __init__(self, patience=0):
+        super(EarlyStopping_Phoneme, self).__init__()
+
+        self.patience = patience
+        self.best_weights = None
+        
+    def on_train_begin(self, logs=None):
+        
+        self.wait = 0
+        self.stopped_epoch = 0
+        self.best_onset_loss = 0
+        self.best_nucleus_loss = 0
+
+    def on_epoch_end(self, epoch, logs=None): 
+
+        onset_loss=logs.get('val_onset_accuracy')
+        nucleus_loss=logs.get('val_nucleus_accuracy')
+
+        if np.greater(onset_loss, self.best_onset_loss) and np.greater(nucleus_loss, self.nucleus_loss):
+            self.best_onset_loss = onset_loss
+            self.best_nucleus_loss = nucleus_loss
+            self.wait = 0
+            self.best_weights = self.model.get_weights()
+        else:
+            self.wait += 1
+            if self.wait >= self.patience:
+                self.stopped_epoch = epoch
+                self.model.stop_training = True
+                print("Restoring model weights from the end of the best epoch.")
+                self.model.set_weights(self.best_weights)
+                
+    def on_train_end(self, logs=None):
+        if self.stopped_epoch > 0:
+            print("Epoch %05d: early stopping" % (self.stopped_epoch + 1))
+
+
 def also_valid_function(classes_also_valid, predicted):
     c = 0
     for n in range(len(classes_also_valid)):
