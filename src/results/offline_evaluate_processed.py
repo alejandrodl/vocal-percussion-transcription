@@ -12,6 +12,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
+from warnings import simplefilter
+simplefilter(action='ignore')
+
 #sys.path.insert(0, os.path.abspath(__file__+"/src/"))
 #from src.utils import *
 
@@ -77,12 +80,12 @@ if gpus:
 
 # Global parameters
 
-num_it = 10
+num_it = 1
 percentage_train = 70
 modes = ['eng_mfcc_env','eng_all_classall','eng_all_classred','eng_all_syllall','eng_all_syllred','eng_all_phonall','eng_all_phonred',
          'vae','classall','classred','syllall','syllred','phonall','phonred'] # Triplet!!
 #clfs = ['slp','mlp','logr','knn','rf','xgboost']
-clfs = ['knn']
+clfs = ['xgboost']
 
 # Data parameters
 
@@ -113,19 +116,27 @@ n_neighbors = 5
 
 # Random Forests parameters
 
-n_estimators = 300
-max_depth = 10
+n_estimators = 100
 
 # Gradient Boosting Trees parameters
 
-max_depth = 10
+#max_depth = 10
+#min_child_weight = 5
+#colsample = 0.8
+#subsample = 0.9
+#learning_rate = 0.02
+#reg_lambda = 1.2
+#reg_alpha = 1.2
+#n_estimators = 500
+
+max_depth = 7
 min_child_weight = 5
-colsample = 0.8
-subsample = 0.9
-learning_rate = 0.02
-reg_lambda = 1.2
-reg_alpha = 1.2
-n_estimators = 500
+colsample = 1
+subsample = 1
+learning_rate = 0.15
+reg_lambda = 1
+reg_alpha = 0
+n_estimators = 1000
 
 params = {'max_depth': max_depth,
         'min_child_weight': min_child_weight,
@@ -237,10 +248,15 @@ for mode in modes:
                     dataset_eval = dataset_eval[:,indices_selected]
             
             for feat in range(dataset.shape[-1]):
-                mean = np.mean(dataset[:,feat])
-                std = np.std(dataset[:,feat])
+                mean = np.mean(np.concatenate((dataset[:,feat],dataset_eval[:,feat])))
+                std = np.std(np.concatenate((dataset[:,feat],dataset_eval[:,feat])))
                 dataset[:,feat] = (dataset[:,feat]-mean)/(std+1e-16)
                 dataset_eval[:,feat] = (dataset_eval[:,feat]-mean)/(std+1e-16)
+
+            mean = np.mean(np.vstack((dataset,dataset_eval)))
+            std = np.std(np.vstack((dataset,dataset_eval)))
+            dataset = (dataset-mean)/(std+1e-16)
+            dataset_eval = (dataset_eval-mean)/(std+1e-16)
 
             np.random.seed(0)
             np.random.shuffle(dataset)
@@ -329,7 +345,7 @@ for mode in modes:
 
                     for it in range(num_it):
 
-                        clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
+                        clf = RandomForestClassifier(n_estimators=n_estimators)
                         clf.fit(dataset, classes)
 
                         accuracies[a,part,b,it] = clf.score(dataset_eval, classes_eval)

@@ -227,12 +227,14 @@ class CNN_Interim_Siamese(tf.keras.Model):
 
     def call(self, x):
 
-        cutoff = tf.shape(x)[2]
+        cutoff = tf.shape(x)[2]//3
 
-        x_1 = x[:,:,:cutoff,:]
-        x_2 = x[:,:,cutoff:,:]
+        x_anchor = x[:,:,:cutoff,:]
+        x_positive = x[:,:,cutoff:2*cutoff,:]
+        x_negative = x[:,:,2*cutoff:,:]
 
-        out_1 = self.cnn(x_1)
-        out_2 = self.cnn(x_2)
+        out_anchor = self.cnn(x_anchor)
+        out_positive = self.cnn(x_positive)
+        out_negative = self.cnn(x_negative)
 
-        return out_1, out_2
+        return out_anchor, out_positive, out_negative

@@ -10,7 +10,44 @@ from networks_offline import *
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+class EarlyStopping_Phoneme(tf.keras.callbacks.Callback):
+    '''
+    Function for early stopping for phoneme labels. It considers both the onset and nucleus losses.
+    '''
+    def __init__(self, patience=0):
+        super(EarlyStopping_Phoneme, self).__init__()
+
+        self.patience = patience
+        self.best_weights = None
+        
+    def on_train_begin(self, logs=None):
+        
+        self.wait = 0
+        self.stopped_epoch = 0
+        self.best_loss = 0
+
+    def on_epoch_end(self, epoch, logs=None):
+
+        onset_loss = logs.get('val_onset_accuracy')
+        nucleus_loss = logs.get('val_nucleus_accuracy')
+
+        if np.greater(0.6*onset_loss+0.4*nucleus_loss, self.best_loss):
+            self.best_loss = 0.6*onset_loss+0.4*nucleus_loss
+            self.wait = 0
+            self.best_weights = self.model.get_weights()
+        else:
+            self.wait += 1
+            if self.wait >= self.patience:
+                self.stopped_epoch = epoch
+                self.model.stop_training = True
+                print("Restoring model weights from the end of the best epoch.")
+                self.model.set_weights(self.best_weights)
+                
+    def on_train_end(self, logs=None):
+        if self.stopped_epoch > 0:
+            print("Epoch %05d: early stopping" % (self.stopped_epoch + 1))
+
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -26,7 +63,7 @@ if gpus:
 
 percentage_train = 85
 modes = ['phonall'] # Triplet!!
-min_acc = [0.42]
+min_acc = [0.55]
 
 # Data parameters
 
@@ -315,13 +352,13 @@ for m in range(len(modes)):
 
                     model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=3*1e-4)
 
-                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_onset_accuracy', patience=patience_early)
-                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_onset_accuracy', patience=patience_lr)
+                    early_stopping = EarlyStopping_Phoneme(patience=7)
+                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_onset_accuracy', patience=14)
 
                     with tf.device(gpu_name):
 
-                        history = model.fit(pretrain_dataset_train, [pretrain_classes_train_onset, pretrain_classes_train_nucleus], batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,[pretrain_classes_test_onset,pretrain_classes_test_nucleus]), callbacks=[early_stopping,lr_scheduler], class_weight=class_weight, shuffle=True, verbose=0)  # , verbose=0
-                        validation_losses_mode[a,part] = history.history['val_onset_accuracy'][-10]
+                        history = model.fit(pretrain_dataset_train, [pretrain_classes_train_onset, pretrain_classes_train_nucleus], batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,[pretrain_classes_test_onset,pretrain_classes_test_nucleus]), callbacks=[early_stopping,lr_scheduler], class_weight=class_weight, shuffle=True)  # , verbose=0
+                        validation_losses_mode[a,part] = (history.history['val_onset_accuracy'][-10]+history.history['val_nucleus_accuracy'][-10])/2
                         print(validation_losses_mode[a,part])
 
             else:
