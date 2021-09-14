@@ -193,10 +193,10 @@ def CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr) -> tf.keras.Mod
 
 
 
-class CNN_Interim_Siamese(tf.keras.Model):
+'''class CNN_Interim_Triplet(tf.keras.Model):
 
-    def __init__(self, num_labels, latent_dim):
-        super(CNN_Interim_Siamese, self).__init__()
+    def __init__(self, latent_dim):
+        super(CNN_Interim_Triplet, self).__init__()
         self.cnn = tf.keras.Sequential(
             [
                 tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
@@ -222,6 +222,7 @@ class CNN_Interim_Siamese(tf.keras.Model):
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
                 tf.keras.layers.Flatten(),
                 tf.keras.layers.Dense(latent_dim)
+                tf.keras.layers.Lambda(lambda x: tf.math.l2_normalize(x, axis=1))
             ]
         )
 
@@ -237,4 +238,92 @@ class CNN_Interim_Siamese(tf.keras.Model):
         out_positive = self.cnn(x_positive)
         out_negative = self.cnn(x_negative)
 
-        return out_anchor, out_positive, out_negative
+        return out_anchor, out_positive, out_negative'''
+
+
+def CNN_Interim_Triplet(latent_dim) -> tf.keras.Model:
+    """
+    This method builds and returns a Model
+    :return:
+    """
+
+    x_input = tf.keras.Input(shape=(64, 192, 1), dtype='float32')
+
+    x = tf.keras.layers.InputLayer(input_shape=(64, 64, 1))(x_input[:,:,:64,:])
+    x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(latent_dim)(x)
+    x_anchor = tf.keras.layers.Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(x)
+
+    x = tf.keras.layers.InputLayer(input_shape=(64, 64, 1))(x_input[:,:,64:128,:])
+    x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(latent_dim)(x)
+    x_positive = tf.keras.layers.Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(x)
+
+    x = tf.keras.layers.InputLayer(input_shape=(64, 64, 1))(x_input[:,:,128:,:])
+    x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(latent_dim)(x)
+    x_negative = tf.keras.layers.Lambda(lambda x: tf.math.l2_normalize(x, axis=1))(x)
+    
+    model = tf.keras.Model(inputs=[x_input], outputs=[x_anchor, x_positive, x_negative])
+    
+    return model

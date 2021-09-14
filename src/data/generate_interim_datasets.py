@@ -443,6 +443,160 @@ for i in range(len(list_wav)):
 
 
 
+
+
+# Create Train Dataset
+
+fs = 44100
+
+path_audio = 'data/external/AVP_Dataset/Personal'
+
+list_wav_all = []
+list_csv_all = []
+
+for path, subdirs, files in os.walk(path_audio):
+    for filename in files:
+        if filename.endswith('.wav'):
+            list_wav_all.append(os.path.join(path, filename))
+        if filename.endswith('.csv'):
+            list_csv_all.append(os.path.join(path, filename))
+
+list_wav_all = sorted(list_wav_all)
+list_csv_all = sorted(list_csv_all)
+
+list_wav_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+list_csv_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+
+list_wav = list_wav_all[::5] + list_wav_all[1::5] + list_wav_all[3::5] + list_wav_all[4::5]
+list_csv = list_csv_all[::5] + list_csv_all[1::5] + list_csv_all[3::5] + list_csv_all[4::5]
+
+list_wav_all = sorted(list_wav)
+list_csv_all = sorted(list_csv)
+
+list_wav_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+list_csv_all.sort(key = lambda f:int(''.join(filter(str.isdigit,f))))
+
+for j in range(len(num_specs)):
+
+    for k in range(len(frame_sizes)):
+
+        frame_size = frame_sizes[k]
+        num_spec = num_specs[j]
+        
+        for part in range(28):
+            
+            Spec_Matrix_All = np.zeros((1,num_frames,num_spec))
+            Classes_All = np.zeros(1)
+            Onset_Phonemes_Labels_All = np.zeros(1)
+            Nucleus_Phonemes_Labels_All = np.zeros(1)
+            Onset_Phonemes_Reduced_Labels_All = np.zeros(1)
+            Nucleus_Phonemes_Reduced_Labels_All = np.zeros(1)
+
+            for i in range(4):
+
+                onsets = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=0)
+                Classes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=1, dtype=np.unicode_)
+
+                audio, fs = librosa.load(list_wav_all[4*part+i], sr=44100)
+                audio_ref = audio/np.max(abs(audio))
+
+                onsets_samples = onsets*fs
+                onsets_ref = onsets_samples.astype(int)
+                
+                for k in range(1):
+
+                    Classes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=1, dtype=np.unicode_)
+                    Onset_Phonemes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=2, dtype=np.unicode_)
+                    Nucleus_Phonemes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=3, dtype=np.unicode_)
+
+                    Onset_Phonemes_Labels, Nucleus_Phonemes_Labels, Onset_Phonemes_Reduced_Labels, Nucleus_Phonemes_Reduced_Labels = Create_Phoneme_Labels(Onset_Phonemes, Nucleus_Phonemes)
+
+                    if k==0:
+                        audio = audio_ref.copy()
+                        onsets = onsets_ref.copy()
+
+                    spec = librosa.feature.melspectrogram(np.concatenate((audio,np.zeros(4096))), sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                    
+                    if delta_bool:
+                        delta = librosa.feature.delta(spec)
+                        Dataset_Spec = np.concatenate((spec, delta), axis=1)
+                    else:
+                        Dataset_Spec = spec
+
+                    Onsets = np.zeros(Dataset_Spec.shape[0])
+                    location = np.floor(onsets/hop_size)
+                    if (location.astype(int)[-1]<len(Onsets)):
+                        Onsets[location.astype(int)] = 1
+                    else:
+                        Onsets[location.astype(int)[:-1]] = 1
+
+                    if Onsets[len(Onsets)-1]==1:
+                        Classes = Classes[:-1]
+                        Onsets[len(Onsets)-1] = 0
+                        print(len(Classes))
+                        print(int(np.sum(Onsets)))
+
+                    num_onsets = int(np.sum(Onsets))
+                    if num_onsets!=len(Classes):
+                        raise('num_onsets!=len(Classes)')
+                    Spec_Matrix = np.zeros((num_onsets,num_frames,num_spec))
+
+                    L = len(Onsets)
+                    count = 0
+                    for n in range(L):
+                        if Onsets[n]==1:
+                            c = 1
+                            while Onsets[n+c]==0 and (n+c)<L-1:
+                                c += 1
+                            Spec = Dataset_Spec[n:n+c]
+                            if c<num_frames:
+                                Spec = np.concatenate((Spec,np.zeros((num_frames-c,num_spec))))
+                            elif c>=num_frames:
+                                Spec = Spec[:num_frames]
+                            Spec_Matrix[count] = Spec
+                            count += 1
+
+                    if Spec_Matrix.shape[0]==Classes.shape[0]:
+                        Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
+                        Classes_All = np.concatenate((Classes_All,Classes))
+                        Onset_Phonemes_Labels_All = np.concatenate((Onset_Phonemes_Labels_All,Onset_Phonemes_Labels))
+                        Nucleus_Phonemes_Labels_All = np.concatenate((Nucleus_Phonemes_Labels_All,Nucleus_Phonemes_Labels))
+                        Onset_Phonemes_Reduced_Labels_All = np.concatenate((Onset_Phonemes_Reduced_Labels_All,Onset_Phonemes_Reduced_Labels))
+                        Nucleus_Phonemes_Reduced_Labels_All = np.concatenate((Nucleus_Phonemes_Reduced_Labels_All,Nucleus_Phonemes_Reduced_Labels))
+                    else:
+                        print('Cuidao')
+                        Spec_Matrix_All = np.vstack((Spec_Matrix_All,Spec_Matrix))
+                        Classes_All = np.concatenate((Classes_All,Classes))
+                        Onset_Phonemes_Labels_All = np.concatenate((Onset_Phonemes_Labels_All,Onset_Phonemes_Labels))
+                        Nucleus_Phonemes_Labels_All = np.concatenate((Nucleus_Phonemes_Labels_All,Nucleus_Phonemes_Labels))
+                        Onset_Phonemes_Reduced_Labels_All = np.concatenate((Onset_Phonemes_Reduced_Labels_All,Onset_Phonemes_Reduced_Labels))
+                        Nucleus_Phonemes_Reduced_Labels_All = np.concatenate((Nucleus_Phonemes_Reduced_Labels_All,Nucleus_Phonemes_Reduced_Labels))
+
+            Spec_Matrix_All = Spec_Matrix_All[1:]
+            Classes_All = Classes_All[1:]
+            Onset_Phonemes_Labels_All = Onset_Phonemes_Labels_All[1:]
+            Nucleus_Phonemes_Labels_All = Nucleus_Phonemes_Labels_All[1:]
+            Onset_Phonemes_Reduced_Labels_All = Onset_Phonemes_Reduced_Labels_All[1:]
+            Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:]        
+
+            if part<=9:
+                np.save('data/interim/AVP/Dataset_Train_0' + str(part) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/AVP/Classes_Train_0' + str(part), Classes_All)
+                np.save('data/interim/AVP/Syll_Onset_Train_0' + str(part), Onset_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Train_0' + str(part), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Train_0' + str(part), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_0' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
+            else:
+                np.save('data/interim/AVP/Dataset_Train_' + str(part) + '_' + str(frame_size), Spec_Matrix_All)
+                np.save('data/interim/AVP/Classes_Train_' + str(part), Classes_All)
+                np.save('data/interim/AVP/Syll_Onset_Train_' + str(part), Onset_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Train_' + str(part), Nucleus_Phonemes_Labels_All)
+                np.save('data/interim/AVP/Syll_Onset_Reduced_Train_' + str(part), Onset_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
+
+
+
+
 # Create Train Aug Dataset
 
 fs = 44100
