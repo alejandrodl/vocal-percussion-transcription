@@ -13,6 +13,18 @@ from networks_offline import *
 
 
 
+def triplet_loss(y_true, y_pred, margin=0.1):
+
+    anchor_output, positive_output, negative_output = tf.split(y_pred, num_or_size_splits=3, axis=1)
+
+    d_pos = tf.reduce_sum(tf.square(anchor_output - positive_output), 1)
+    d_neg = tf.reduce_sum(tf.square(anchor_output - negative_output), 1)
+
+    loss = tf.maximum(0.0, margin + d_pos - d_neg)
+    
+    return tf.reduce_mean(loss)
+
+
 class EarlyStopping_Phoneme(tf.keras.callbacks.Callback):
     '''
     Function for early stopping for phoneme labels. It considers both the onset and nucleus losses.
@@ -52,7 +64,7 @@ class EarlyStopping_Phoneme(tf.keras.callbacks.Callback):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -144,10 +156,12 @@ for m in range(len(modes)):
 
                 # Create triplet dataset
 
+                print('Creating triplet dataset...')
+
                 classes = np.zeros(1)
 
-                classes_triplet = np.zeros(1)
-                pretrain_dataset = np.zeros((1, 64, 64))
+                classes_pre_triplet = np.zeros(1)
+                pretriplet_dataset = np.zeros((1, 64, 64))
                 for n in range(28):
                     if n==part:
                         continue
@@ -165,8 +179,8 @@ for m in range(len(modes)):
                                     classes_pre[nc] = (n*4)+2
                                 elif classes_str[nc]=='hho':
                                     classes_pre[nc] = (n*4)+3
-                            classes_triplet = np.concatenate((classes_triplet, classes_pre))
-                            pretrain_dataset = np.vstack((pretrain_dataset, pretrain_data))
+                            classes_pre_triplet = np.concatenate((classes_pre_triplet, classes_pre))
+                            pretriplet_dataset = np.vstack((pretriplet_dataset, pretrain_data))
                         else:
                             pretrain_data = np.load('../../data/interim/AVP/Dataset_Train_' + str(n) + '_1024.npy')
                             classes_str = np.load('../../data/interim/AVP/Classes_Train_' + str(n) + '.npy')
@@ -180,12 +194,12 @@ for m in range(len(modes)):
                                     classes_pre[nc] = (n*4)+2
                                 elif classes_str[nc]=='hho':
                                     classes_pre[nc] = (n*4)+3
-                            classes_triplet = np.concatenate((classes_triplet, classes_pre))
-                            pretrain_dataset = np.vstack((pretrain_dataset, pretrain_data))
-                classes_triplet = classes_triplet[1:]
-                pretrain_dataset = pretrain_dataset[1:]
+                            classes_pre_triplet = np.concatenate((classes_pre_triplet, classes_pre))
+                            pretriplet_dataset = np.vstack((pretriplet_dataset, pretrain_data))
+                classes_pre_triplet = classes_pre_triplet[1:]
+                pretriplet_dataset = pretriplet_dataset[1:]
 
-                num_classes = int(np.max(classes_triplet)+1)
+                num_classes = int(np.max(classes_pre_triplet)+1)
 
                 classes_pre_triplet_onset = np.zeros(1)
                 for n in range(28):
@@ -222,19 +236,57 @@ for m in range(len(modes)):
                 class_start_part = int(part*4)
                 class_end_part = class_start_part + 4
 
-                cmb = []
-                lbl = 0
-                classes = []
-                for n in range(pretrain_dataset.shape[0]):
-                    cmb_current = [classes_triplet[n],classes_syllables[n]]
-                    if cmb_current in cmb:
-                        classes.append(lbl)
+                counter = 0
+                for n in range(num_classes):
+                    class_start = n//4
+                    class_end = class_start + 4
+                    if class_start==class_start_part:
+                        continue
                     else:
-                        lbl += 1
-                        cmb.append(cmb_current)
-                        classes.append(lbl)
-                classes = np.array(classes)
-                        
+                        for it in range(2):
+                            indices_sound = np.argwhere(classes_pre_triplet==n)[:,0]
+                            syllables_sound = classes_syllables[indices_sound.tolist()]
+                            unique_syllables = np.unique(syllables_sound)
+                            for sy in range(len(unique_syllables)):
+                                indices_sound_syll = indices_sound[np.argwhere(syllables_sound==unique_syllables[sy])[:,0].tolist()]
+                                anchors_positives = list(combinations(indices_sound_syll.tolist(),2))
+                                counter += len(anchors_positives)
+
+                pretrain_dataset = np.zeros((counter,64,192))
+                c = 0
+
+                for n in range(num_classes):
+                    class_start = n//4
+                    class_end = class_start + 4
+                    if class_start==class_start_part:
+                        continue
+                    else:
+                        for it in range(2):
+                            indices_sound = np.argwhere(classes_pre_triplet==n)[:,0]
+                            syllables_sound = classes_syllables[indices_sound.tolist()]
+                            unique_syllables = np.unique(syllables_sound)
+                            indices_sounds_part = list(set(np.argwhere(classes_pre_triplet>=class_start)[:,0])&set(np.argwhere(classes_pre_triplet<class_end)[:,0]))
+                            indices_sounds_other = np.concatenate((np.argwhere(classes_pre_triplet<class_start)[:,0],np.argwhere(classes_pre_triplet>=class_end)[:,0]))
+                            for sy in range(len(unique_syllables)):
+                                indices_sound_syll = indices_sound[np.argwhere(syllables_sound==unique_syllables[sy])[:,0].tolist()]
+                                anchors_positives = list(combinations(indices_sound_syll.tolist(),2))
+                                L = len(anchors_positives)
+                                L_half = L//2
+                                negatives_part = np.random.choice(indices_sounds_part, size=L_half, replace=True)
+                                negatives_other = np.random.choice(indices_sounds_other, size=L-L_half, replace=True)
+                                for s in range(L_half):
+                                    pretrain_dataset[c,:,:64] = pretriplet_dataset[anchors_positives[s][0]]
+                                    pretrain_dataset[c,:,64:128] = pretriplet_dataset[anchors_positives[s][1]]
+                                    pretrain_dataset[c,:,128:192] = pretriplet_dataset[negatives_part[s]]
+                                    c += 1
+                                for s in range(L_half,L):
+                                    pretrain_dataset[c,:,:64] = pretriplet_dataset[anchors_positives[s][0]]
+                                    pretrain_dataset[c,:,64:128] = pretriplet_dataset[anchors_positives[s][1]]
+                                    pretrain_dataset[c,:,128:192] = pretriplet_dataset[negatives_other[s-L_half]]
+                                    c += 1
+
+                print('Done.')
+
             # Spectrogram normalisation
 
             pretrain_dataset = (pretrain_dataset-norm_min_max_1[1][0])/(norm_min_max_1[1][1]-norm_min_max_1[1][0]+1e-16)
@@ -428,7 +480,7 @@ for m in range(len(modes)):
                 np.random.seed(0)
                 np.random.shuffle(pretrain_classes_test_nucleus)
 
-            elif 'class' in mode or mode=='triplet':
+            elif 'class' in mode:
 
                 pretrain_classes_train = classes[:cutoff_train].astype('float32')
                 pretrain_classes_test = classes[cutoff_train:].astype('float32')
@@ -439,9 +491,16 @@ for m in range(len(modes)):
                 np.random.seed(0)
                 np.random.shuffle(pretrain_classes_test)
 
+            elif mode=='triplet':
+
+                pretrain_classes_train = np.zeros(pretrain_dataset_train.shape[0]).astype('float32')
+                pretrain_classes_test = np.zeros(pretrain_dataset_test.shape[0]).astype('float32')
+
             # Train models
 
             if mode=='vae':
+
+                validation_losses_mode[a,part] = 1
 
                 while validation_losses_mode[a,part] > 0.003:
 
@@ -473,20 +532,24 @@ for m in range(len(modes)):
                         validation_losses_mode[a,part] = (history.history['val_onset_accuracy'][-10]+history.history['val_nucleus_accuracy'][-10])/2
                         print(validation_losses_mode[a,part])
 
-            elif mode=='triplet':
+            elif 'triplet' in mode:
 
-                model = CNN_Interim_Triplet(latent_dim)
+                validation_losses_mode[a,part] = 1
 
-                optimizer = tf.keras.optimizers.Adam(lr=1e-3)
-                early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=2*patience_early)
-                lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=2*patience_lr)
+                while validation_losses_mode[a,part] > 0.006:
 
-                with tf.device(gpu_name):
+                    model = CNN_Interim_Triplet(latent_dim)
 
-                    model.compile(optimizer=optimizer, loss=tfa.losses.TripletSemiHardLoss()) # margin=0.0
-                    history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=(len(pretrain_classes_test)//4)+1, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
-                    validation_losses_mode[a,part] = history.history['val_loss'][-10]
-                    print(validation_losses_mode[a,part])
+                    optimizer = tf.keras.optimizers.Adam(lr=1e-3)
+                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=3)
+
+                    with tf.device(gpu_name):
+
+                        model.compile(optimizer=optimizer, loss=triplet_loss)
+                        history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=1024, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
+                        validation_losses_mode[a,part] = history.history['val_loss'][-5]
+                        print(validation_losses_mode[a,part])
 
             else:
 
@@ -543,8 +606,8 @@ for m in range(len(modes)):
                 train_features, _ = model.encode(train_dataset)
                 test_features, _ = model.encode(test_dataset)
             elif mode=='triplet':
-                train_features = model.embedding_net(train_dataset)
-                test_features = model.embedding_net(test_dataset)
+                train_features = model.cnn(train_dataset)
+                test_features = model.cnn(test_dataset)
             else:
                 extractor = tf.keras.Sequential()
                 for layer in model.cnn.layers[:-1]:

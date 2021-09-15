@@ -196,7 +196,7 @@ class CNN_Interim_Triplet(tf.keras.Model):
 
     def __init__(self, latent_dim):
         super(CNN_Interim_Triplet, self).__init__()
-        self.embedding_net = tf.keras.Sequential(
+        self.cnn = tf.keras.Sequential(
             [
                 tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
@@ -220,11 +220,21 @@ class CNN_Interim_Triplet(tf.keras.Model):
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
                 tf.keras.layers.Flatten(),
-                tf.keras.layers.Dense(latent_dim, activation=None),
+                tf.keras.layers.Dense(latent_dim),
                 tf.keras.layers.Lambda(lambda x: tf.math.l2_normalize(x, axis=1))
             ]
         )
 
     def call(self, x):
-        out = self.cnn(x)
+
+        cutoff = tf.shape(x)[2]//3
+
+        x_anchor, x_positive, x_negative = tf.split(x, num_or_size_splits=3, axis=-2)
+
+        out_anchor = self.cnn(x_anchor)
+        out_positive = self.cnn(x_positive)
+        out_negative = self.cnn(x_negative)
+
+        out = tf.concat((out_anchor, out_positive, out_negative),axis=1)
+
         return out
