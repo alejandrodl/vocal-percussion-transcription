@@ -514,7 +514,7 @@ for m in range(len(modes)):
 
                         model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError(), metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=False)
                         history = model.fit(pretrain_dataset_train, pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_dataset_test), callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0)  # , verbose=0
-                        validation_losses_mode[a,part] = history.history['val_loss'][-10]
+                        validation_losses_mode[a,part] = min(history.history['val_loss'])
                         print(validation_losses_mode[a,part])
 
             elif 'phon' in mode:
@@ -529,7 +529,7 @@ for m in range(len(modes)):
                     with tf.device(gpu_name):
 
                         history = model.fit(pretrain_dataset_train, [pretrain_classes_train_onset, pretrain_classes_train_nucleus], batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,[pretrain_classes_test_onset,pretrain_classes_test_nucleus]), callbacks=[early_stopping,lr_scheduler], class_weight=class_weight, shuffle=True, verbose=0)  # , verbose=0
-                        validation_losses_mode[a,part] = (history.history['val_onset_accuracy'][-10]+history.history['val_nucleus_accuracy'][-10])/2
+                        validation_losses_mode[a,part] = (history.history['val_onset_accuracy'][-patience_early-1]+history.history['val_nucleus_accuracy'][-patience_early-1])/2
                         print(validation_losses_mode[a,part])
 
             elif 'triplet' in mode:
@@ -548,7 +548,7 @@ for m in range(len(modes)):
 
                         model.compile(optimizer=optimizer, loss=triplet_loss)
                         history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=1024, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
-                        validation_losses_mode[a,part] = history.history['val_loss'][-5]
+                        validation_losses_mode[a,part] = min(history.history['val_loss'])
                         print(validation_losses_mode[a,part])
 
             else:
@@ -565,7 +565,7 @@ for m in range(len(modes)):
 
                         model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
                         history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True, verbose=0)  # , verbose=0
-                        validation_losses_mode[a,part] = history.history['val_accuracy'][-10]
+                        validation_losses_mode[a,part] = max(history.history['val_accuracy'])
                         print(validation_losses_mode[a,part])
 
             if part<=9:
