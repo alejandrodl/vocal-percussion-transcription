@@ -31,7 +31,7 @@ class VAE_Interim(tf.keras.Model):
         self.latent_dim = 32
         self.encoder = tf.keras.Sequential(
             [
-                tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
+                tf.keras.layers.InputLayer(input_shape=(64, 48, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
@@ -61,10 +61,8 @@ class VAE_Interim(tf.keras.Model):
         self.decoder = tf.keras.Sequential(
             [
                 tf.keras.layers.InputLayer(input_shape=(self.latent_dim,)),
-                tf.keras.layers.Dense(units=2*2*128, activation=tf.nn.relu),
-                tf.keras.layers.Reshape(target_shape=(2, 2, 128)),
-                tf.keras.layers.Conv2DTranspose(
-                    filters=64, kernel_size=(3,3), strides=(2,2), padding='same', activation='relu'),
+                tf.keras.layers.Dense(units=4*3*64, activation=tf.nn.relu),
+                tf.keras.layers.Reshape(target_shape=(4, 3, 64)),
                 tf.keras.layers.Conv2DTranspose(
                     filters=32, kernel_size=(3,3), strides=(2,2), padding='same', activation='relu'),
                 tf.keras.layers.Conv2DTranspose(
@@ -111,7 +109,7 @@ class CNN_Interim(tf.keras.Model):
         super(CNN_Interim, self).__init__()
         self.cnn = tf.keras.Sequential(
             [
-                tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
+                tf.keras.layers.InputLayer(input_shape=(64, 48, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
@@ -151,9 +149,9 @@ def CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr) -> tf.keras.Mod
     :return:
     """
 
-    x_input = tf.keras.Input(shape=(64, 64, 1), dtype='float32')
+    x_input = tf.keras.Input(shape=(64, 48, 1), dtype='float32')
 
-    x = tf.keras.layers.InputLayer(input_shape=(64, 64, 1))(x_input)
+    x = tf.keras.layers.InputLayer(input_shape=(64, 48, 1))(x_input)
     x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
@@ -192,13 +190,13 @@ def CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr) -> tf.keras.Mod
     return model
 
 
-class CNN_Interim_Triplet(tf.keras.Model):
+class CNN_Interim_Siamese(tf.keras.Model):
 
     def __init__(self, latent_dim):
-        super(CNN_Interim_Triplet, self).__init__()
+        super(CNN_Interim_Siamese, self).__init__()
         self.cnn = tf.keras.Sequential(
             [
-                tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
+                tf.keras.layers.InputLayer(input_shape=(64, 48, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
@@ -227,14 +225,13 @@ class CNN_Interim_Triplet(tf.keras.Model):
 
     def call(self, x):
 
-        cutoff = tf.shape(x)[2]//3
+        cutoff = tf.shape(x)[2]//2
 
-        x_anchor, x_positive, x_negative = tf.split(x, num_or_size_splits=3, axis=-2)
+        x_1, x_2 = tf.split(x, num_or_size_splits=2, axis=-2)
 
-        out_anchor = self.cnn(x_anchor)
-        out_positive = self.cnn(x_positive)
-        out_negative = self.cnn(x_negative)
+        out_1 = self.cnn(x_1)
+        out_2 = self.cnn(x_2)
 
-        out = tf.concat((out_anchor, out_positive, out_negative),axis=1)
+        dist = tf.reduce_sum(tf.square(out_1-out_2), 1)
 
-        return out
+        return dist
