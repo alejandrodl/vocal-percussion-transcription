@@ -14,14 +14,13 @@ from sklearn.metrics import accuracy_score
 
 # Global parameters
 
-percentage_train = 80
-#modes = ['classall','classred','syllall','syllred','phonall','phonred']
-modes = ['phonall','phonred']
+percentage_train = 75
+modes = ['classall','classred','syllall','syllred','phonall','phonred']
 mode_feat = 'eng_all'
 
 # Data parameters
 
-frame_sizes = ['1024']
+frame_size = '1024'
 
 # Features
 
@@ -54,6 +53,7 @@ features_misc = ['RollOff_25_mean','RollOff_50_mean','RollOff_90_mean','RollOff_
                     'RollOff_25_dmax','RollOff_50_dmax','RollOff_90_dmax','RollOff_95_dmax','SpecComplexity_dmax','HFC_dmax','StrongPeak_dmax','SpecCentroid_dmax','SpecVariance_dmax','SpecSkewness_dmax','SpecKurtosis_dmax','SpecCrest_dmax','SpecDecrease_dmax','SpecEntropy_dmax','SpecFlatness_dmax','SpecRMS_dmax','ZCR_dmax']
 
 features_names = features_env + features_mfcc + features_melbands + features_misc
+features_names = np.array(features_names)
 
 # Main loop
 
@@ -61,237 +61,280 @@ for m in range(len(modes)):
 
     mode = modes[m]
 
-    validation_losses_mode = np.ones((len(frame_sizes),28))
-
     if not os.path.isdir('data/processed/' + mode):
         os.mkdir('data/processed/' + mode)
 
-    for a in range(len(frame_sizes)):
+    print('\n')
+    print(mode)
+    print('\n')
 
-        frame_size = frame_sizes[a]
+    # Load and process spectrograms
 
-        print('\n')
-        print([mode,frame_size])
-        print('\n')
+    dataset = np.zeros((1,258))
+    for part in range(28):
+        if part<=9:
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_0' + str(part) + '.npy')))
+        else:
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_' + str(part) + '.npy')))
+    for part in range(20):
+        if part<=9:
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_0' + str(part) + '.npy')))
+        else:
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_' + str(part) + '.npy')))
+    dataset = dataset[1:]
 
-        # Load and process spectrograms
+    for feat in range(dataset.shape[-1]):
+        mean = np.mean(dataset[:,feat])
+        std = np.std(dataset[:,feat])
+        dataset[:,feat] = (dataset[:,feat]-mean)/(std+1e-16)
 
-        dataset = np.zeros((1,258))
-        for part in range(28):
-            if part<=9:
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_' + mode_feat + '_' + frame_size + '_0' + str(part) + '.npy')))
+    cutoff_train = int((percentage_train/100)*dataset.shape[0])
+
+    dataset_train = dataset[:cutoff_train]
+    dataset_test = dataset[cutoff_train:]
+    
+    np.random.seed(0)
+    np.random.shuffle(dataset_train)
+
+    np.random.seed(0)
+    np.random.shuffle(dataset_test)
+
+    # Load and process classes
+
+    if 'syllall' in mode or 'phonall' in mode:
+
+        classes_onset = np.zeros(1)
+        for n in range(28):
+            if n<=9:
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
             else:
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_' + mode_feat + '_' + frame_size + '_' + str(part) + '.npy')))
-        dataset = dataset[1:]
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n<=9:
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+        classes_onset = classes_onset[1:]
 
-        for feat in range(dataset.shape[-1]):
-            mean = np.mean(dataset[:,feat])
-            std = np.std(dataset[:,feat])
-            dataset[:,feat] = (dataset[:,feat]-mean)/(std+1e-16)
+        classes_nucleus = np.zeros(1)
+        for n in range(28):
+            if n<=9:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n<=9:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+        classes_nucleus = classes_nucleus[1:]
 
-        cutoff_train = int((percentage_train/100)*dataset.shape[0])
+        num_onset = np.max(classes_onset)+1
+        num_nucleus = np.max(classes_nucleus)+1
 
-        dataset_train = dataset[:cutoff_train]
-        dataset_test = dataset[cutoff_train:]
+    elif 'syllred' in mode or 'phonred' in mode:
+
+        classes_onset = np.zeros(1)
+        for n in range(28):
+            if n<=9:
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n<=9:
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+        classes_onset = classes_onset[1:]
+
+        classes_nucleus = np.zeros(1)
+        for n in range(28):
+            if n<=9:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n<=9:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+        classes_nucleus = classes_nucleus[1:]
+
+        num_onset = np.max(classes_onset)+1
+        num_nucleus = np.max(classes_nucleus)+1
+
+    elif 'classall' in mode:
+
+        classes_str = np.zeros(1)
+        for n in range(28):
+            if n<=9:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n<=9:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+        classes_str = classes_str[1:]
+
+        classes = np.zeros(len(classes_str))
+        for n in range(len(classes_str)):
+            if classes_str[n]=='kd' or classes_str[n]=='Kick':
+                classes[n] = 0
+            elif classes_str[n]=='sd' or classes_str[n]=='Snare':
+                classes[n] = 1
+            elif classes_str[n]=='hhc' or classes_str[n]=='HH':
+                classes[n] = 2
+            elif classes_str[n]=='hho':
+                classes[n] = 3
+
+        num_classes = np.max(classes)+1
+
+    elif 'classred' in mode:
+
+        classes_str = np.zeros(1)
+        for n in range(28):
+            if n<=9:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n<=9:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+            else:
+                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+        classes_str = classes_str[1:]
+
+        classes = np.zeros(len(classes_str))
+        for n in range(len(classes_str)):
+            if classes_str[n]=='kd' or classes_str[n]=='Kick':
+                classes[n] = 0
+            elif classes_str[n]=='sd' or classes_str[n]=='Snare':
+                classes[n] = 0
+            elif classes_str[n]=='hhc' or classes_str[n]=='HH':
+                classes[n] = 1
+            elif classes_str[n]=='hho':
+                classes[n] = 1
+
+        num_classes = np.max(classes)+1
+
+    if 'syll' in mode:
+
+        combinations = []
+        classes = np.zeros(len(classes_onset))
+        for n in range(len(classes_onset)):
+            combination = [classes_onset[n],classes_nucleus[n]]
+            if combination not in combinations:
+                combinations.append(combination)
+                classes[n] = combinations.index(combination)
+            else:
+                classes[n] = combinations.index(combination)
+
+        num_classes = np.max(classes)+1
+        
+        classes_train = classes[:cutoff_train].astype('float32')
+        classes_test = classes[cutoff_train:].astype('float32')
+
+        np.random.seed(0)
+        np.random.shuffle(classes_train)
         
         np.random.seed(0)
-        np.random.shuffle(dataset_train)
+        np.random.shuffle(classes_test)
+
+        print('Calculating importances...')
+
+        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+
+        forest.fit(dataset_train, classes_train)
+        results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
+
+        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        names_sorted = features_names[indices_sorted.tolist()]
+
+        print(indices_sorted.shape)
+        print(importances_sorted.shape)
+
+        print(indices_sorted)
+        print(importances_sorted)
+
+        np.save('data/processed/' + mode + '/names_sorted_eng_' + mode, names_sorted)
+        np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
+        np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode, importances_sorted)
+
+    elif 'phon' in mode:
+        
+        classes_train_onset = classes_onset[:cutoff_train].astype('float32')
+        classes_train_nucleus = classes_nucleus[:cutoff_train].astype('float32')
+        classes_test_onset = classes_onset[cutoff_train:].astype('float32')
+        classes_test_nucleus = classes_nucleus[cutoff_train:].astype('float32')
 
         np.random.seed(0)
-        np.random.shuffle(dataset_test)
-
-        # Load and process classes
-
-        if 'syllall' in mode or 'phonall' in mode:
-
-            classes_onset = np.zeros(1)
-            for n in range(28):
-                if n<=9:
-                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
-                else:
-                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
-            classes_onset = classes_onset[1:]
-
-            classes_nucleus = np.zeros(1)
-            for n in range(28):
-                if n<=9:
-                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
-                else:
-                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
-            classes_nucleus = classes_nucleus[1:]
-
-            num_onset = np.max(classes_onset)+1
-            num_nucleus = np.max(classes_nucleus)+1
-
-        elif 'syllred' in mode or 'phonred' in mode:
-
-            classes_onset = np.zeros(1)
-            for n in range(28):
-                if n<=9:
-                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
-                else:
-                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
-            classes_onset = classes_onset[1:]
-
-            classes_nucleus = np.zeros(1)
-            for n in range(28):
-                if n<=9:
-                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
-                else:
-                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
-            classes_nucleus = classes_nucleus[1:]
-
-            num_onset = np.max(classes_onset)+1
-            num_nucleus = np.max(classes_nucleus)+1
-
-        elif 'classall' in mode:
-
-            classes_str = np.zeros(1)
-            for n in range(28):
-                if n<=9:
-                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
-                else:
-                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
-            classes_str = classes_str[1:]
-
-            classes = np.zeros(len(classes_str))
-            for n in range(len(classes_str)):
-                if classes_str[n]=='kd':
-                    classes[n] = 0
-                elif classes_str[n]=='sd':
-                    classes[n] = 1
-                elif classes_str[n]=='hhc':
-                    classes[n] = 2
-                elif classes_str[n]=='hho':
-                    classes[n] = 3
-
-            num_classes = np.max(classes)+1
-
-        elif 'classred' in mode:
-
-            classes_str = np.zeros(1)
-            for n in range(28):
-                if n<=9:
-                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
-                else:
-                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
-            classes_str = classes_str[1:]
-
-            classes = np.zeros(len(classes_str))
-            for n in range(len(classes_str)):
-                if classes_str[n]=='kd':
-                    classes[n] = 0
-                elif classes_str[n]=='sd':
-                    classes[n] = 0
-                elif classes_str[n]=='hhc':
-                    classes[n] = 1
-                elif classes_str[n]=='hho':
-                    classes[n] = 1
-
-            num_classes = np.max(classes)+1
-
-        if 'syll' in mode:
-
-            combinations = []
-            classes = np.zeros(len(classes_onset))
-            for n in range(len(classes_onset)):
-                combination = [classes_onset[n],classes_nucleus[n]]
-                if combination not in combinations:
-                    combinations.append(combination)
-                    classes[n] = combinations.index(combination)
-                else:
-                    classes[n] = combinations.index(combination)
-
-            num_classes = np.max(classes)+1
-            
-            classes_train = classes[:cutoff_train].astype('float32')
-            classes_test = classes[cutoff_train:].astype('float32')
-
-            np.random.seed(0)
-            np.random.shuffle(classes_train)
-            
-            np.random.seed(0)
-            np.random.shuffle(classes_test)
-
-            print('Calculating importances...')
-
-            forest = RandomForestClassifier(n_estimators=1000,random_state=0)
-
-            forest.fit(dataset_train, classes_train)
-            results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
-
-            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-            importances_sorted = sorted(np.array(results.importances_mean))[::-1]
-
-            np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
-            np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode, importances_sorted)
-
-        elif 'phon' in mode:
-            
-            classes_train_onset = classes_onset[:cutoff_train].astype('float32')
-            classes_train_nucleus = classes_nucleus[:cutoff_train].astype('float32')
-            classes_test_onset = classes_onset[cutoff_train:].astype('float32')
-            classes_test_nucleus = classes_nucleus[cutoff_train:].astype('float32')
-
-            np.random.seed(0)
-            np.random.shuffle(classes_train_onset)
-            
-            np.random.seed(0)
-            np.random.shuffle(classes_train_nucleus)
-
-            np.random.seed(0)
-            np.random.shuffle(classes_test_onset)
-            
-            np.random.seed(0)
-            np.random.shuffle(classes_test_nucleus)
-
-            print('Calculating onset importances...')
-
-            forest = RandomForestClassifier(n_estimators=1000,random_state=0)
-
-            forest.fit(dataset_train, classes_train_onset)
-            results = permutation_importance(forest, dataset_test, classes_test_onset, n_repeats=10, random_state=0)
-
-            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-            importances_sorted = sorted(np.array(results.importances_mean))[::-1]
-
-            np.save('data/processed/' + mode + '/indices_sorted_onset_eng_' + mode, indices_sorted)
-            np.save('data/processed/' + mode + '/importances_sorted_onset_eng_' + mode, importances_sorted)
-
-            #print('Calculating nucleus importances...')
-
-            #forest = RandomForestClassifier(n_estimators=1000,random_state=0)
-
-            #forest.fit(dataset_train, classes_train_nucleus)
-            #results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=10, random_state=0)
-
-            #indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-            #importances_sorted = sorted(np.array(results.importances_mean))[::-1]
-
-            #np.save('data/processed/' + mode + '/indices_sorted_nucleus_eng_' + mode, indices_sorted)
-            #np.save('data/processed/' + mode + '/importances_sorted_nucleus_eng_' + mode, importances_sorted)
-
-        elif 'class' in mode:
-
-            classes_train = classes[:cutoff_train].astype('float32')
-            classes_test = classes[cutoff_train:].astype('float32')
-
-            np.random.seed(0)
-            np.random.shuffle(classes_train)
-            
-            np.random.seed(0)
-            np.random.shuffle(classes_test)
-
-            print('Calculating importances...')
+        np.random.shuffle(classes_train_onset)
         
-            forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+        np.random.seed(0)
+        np.random.shuffle(classes_train_nucleus)
 
-            forest.fit(dataset_train, classes_train)
-            results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
+        np.random.seed(0)
+        np.random.shuffle(classes_test_onset)
+        
+        np.random.seed(0)
+        np.random.shuffle(classes_test_nucleus)
 
-            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-            importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        print('Calculating onset importances...')
 
-            np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
-            np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode, importances_sorted)
+        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+
+        forest.fit(dataset_train, classes_train_onset)
+        results = permutation_importance(forest, dataset_test, classes_test_onset, n_repeats=10, random_state=0)
+
+        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        names_sorted = features_names[indices_sorted.tolist()]
+
+        np.save('data/processed/' + mode + '/names_sorted_onset_eng_' + mode, names_sorted)
+        np.save('data/processed/' + mode + '/indices_sorted_onset_eng_' + mode, indices_sorted)
+        np.save('data/processed/' + mode + '/importances_sorted_onset_eng_' + mode, importances_sorted)
+
+        print('Calculating nucleus importances...')
+
+        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+
+        forest.fit(dataset_train, classes_train_nucleus)
+        results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=10, random_state=0)
+
+        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        names_sorted = features_names[indices_sorted.tolist()]
+
+        np.save('data/processed/' + mode + '/names_sorted_nucleus_eng_' + mode, names_sorted)
+        np.save('data/processed/' + mode + '/indices_sorted_nucleus_eng_' + mode, indices_sorted)
+        np.save('data/processed/' + mode + '/importances_sorted_nucleus_eng_' + mode, importances_sorted)
+
+    elif 'class' in mode:
+
+        classes_train = classes[:cutoff_train].astype('float32')
+        classes_test = classes[cutoff_train:].astype('float32')
+
+        np.random.seed(0)
+        np.random.shuffle(classes_train)
+        
+        np.random.seed(0)
+        np.random.shuffle(classes_test)
+
+        print('Calculating importances...')
+    
+        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+
+        forest.fit(dataset_train, classes_train)
+        results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
+
+        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        names_sorted = features_names[indices_sorted.tolist()]
+
+        np.save('data/processed/' + mode + '/names_sorted_eng_' + mode, names_sorted)
+        np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
+        np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode, importances_sorted)
 

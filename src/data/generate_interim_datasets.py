@@ -145,7 +145,7 @@ delta_bool = False
 
 
 
-# Create AVP Test Dataset
+'''# Create AVP Test Dataset
 
 print('AVP Test')
 
@@ -707,7 +707,7 @@ for j in range(len(num_specs)):
                 np.save('data/interim/AVP/Syll_Onset_Train_Aug_' + str(part), Onset_Phonemes_Labels_All)
                 np.save('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(part), Nucleus_Phonemes_Labels_All)
                 np.save('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(part), Onset_Phonemes_Reduced_Labels_All)
-                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)'''
 
 
 
@@ -1009,7 +1009,7 @@ for j in range(len(num_specs)):
             Onset_Phonemes_Reduced_Labels_All = np.zeros(1)
             Nucleus_Phonemes_Reduced_Labels_All = np.zeros(1)
             
-            for k in range(10):
+            for k in range(1):
 
                 Classes = np.loadtxt(list_csv[i], delimiter=',', usecols=1, dtype=np.unicode_)
                 Onset_Phonemes = np.loadtxt(list_csv[i], delimiter=',', usecols=2, dtype=np.unicode_)
