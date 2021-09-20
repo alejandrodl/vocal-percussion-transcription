@@ -250,14 +250,8 @@ for m in range(len(modes)):
         results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
 
         indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
         names_sorted = features_names[indices_sorted.tolist()]
-
-        print(indices_sorted.shape)
-        print(importances_sorted.shape)
-
-        print(indices_sorted)
-        print(importances_sorted)
 
         np.save('data/processed/' + mode + '/names_sorted_eng_' + mode, names_sorted)
         np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
@@ -290,7 +284,7 @@ for m in range(len(modes)):
         results = permutation_importance(forest, dataset_test, classes_test_onset, n_repeats=10, random_state=0)
 
         indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
         names_sorted = features_names[indices_sorted.tolist()]
 
         np.save('data/processed/' + mode + '/names_sorted_onset_eng_' + mode, names_sorted)
@@ -305,7 +299,7 @@ for m in range(len(modes)):
         results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=10, random_state=0)
 
         indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
         names_sorted = features_names[indices_sorted.tolist()]
 
         np.save('data/processed/' + mode + '/names_sorted_nucleus_eng_' + mode, names_sorted)
@@ -331,8 +325,16 @@ for m in range(len(modes)):
         results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
 
         indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = sorted(np.array(results.importances_mean))[::-1]
+        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
         names_sorted = features_names[indices_sorted.tolist()]
+
+        print(indices_sorted.shape)
+        print(importances_sorted.shape)
+        print(names_sorted.shape)
+
+        print(indices_sorted)
+        print(importances_sorted)
+        print(names_sorted)
 
         np.save('data/processed/' + mode + '/names_sorted_eng_' + mode, names_sorted)
         np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
