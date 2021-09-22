@@ -2,6 +2,7 @@ import os
 import sys
 import numpy as np
 import tensorflow as tf
+from itertools import combinations
 import tensorflow_probability as tfp
 
 #sys.path.append('/homes/adl30/vocal-percussion-transcription')
@@ -15,8 +16,12 @@ from sklearn.metrics import accuracy_score
 # Global parameters
 
 percentage_train = 75
-modes = ['classall','classred','syllall','syllred','phonall','phonred']
+#modes = ['classall','classred','syllall','syllred','phonall','phonred','sound']
+modes = ['sound']
 mode_feat = 'eng_all'
+
+list_test_participants_avp = [8,10,18,23]
+list_test_participants_lvt = [0,6,7,13]
 
 # Data parameters
 
@@ -72,15 +77,25 @@ for m in range(len(modes)):
 
     dataset = np.zeros((1,258))
     for part in range(28):
-        if part<=9:
-            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_0' + str(part) + '.npy')))
+        if part in list_test_participants_avp:
+            continue
         else:
-            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_' + str(part) + '.npy')))
+            if part<=9:
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_0' + str(part) + '.npy')))
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_avp_' + mode_feat + '_0' + str(part) + '.npy')))
+            else:
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_' + str(part) + '.npy')))
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_avp_' + mode_feat + '_' + str(part) + '.npy')))
     for part in range(20):
-        if part<=9:
-            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_0' + str(part) + '.npy')))
+        if part in list_test_participants_lvt:
+            continue
         else:
-            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_' + str(part) + '.npy')))
+            if part<=9:
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_0' + str(part) + '.npy')))
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_lvt_' + mode_feat + '_0' + str(part) + '.npy')))
+            else:
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_' + str(part) + '.npy')))
+                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_lvt_' + mode_feat + '_' + str(part) + '.npy')))
     dataset = dataset[1:]
 
     for feat in range(dataset.shape[-1]):
@@ -105,28 +120,48 @@ for m in range(len(modes)):
 
         classes_onset = np.zeros(1)
         for n in range(28):
-            if n<=9:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_avp:
+                continue
             else:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Test_' + str(n) + '.npy')))
         for n in range(20):
-            if n<=9:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_lvt:
+                continue
             else:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Test_' + str(n) + '.npy')))
         classes_onset = classes_onset[1:]
 
         classes_nucleus = np.zeros(1)
         for n in range(28):
-            if n<=9:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_avp:
+                continue
             else:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Test_' + str(n) + '.npy')))
         for n in range(20):
-            if n<=9:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_lvt:
+                continue
             else:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Test_' + str(n) + '.npy')))
         classes_nucleus = classes_nucleus[1:]
 
         num_onset = np.max(classes_onset)+1
@@ -136,28 +171,48 @@ for m in range(len(modes)):
 
         classes_onset = np.zeros(1)
         for n in range(28):
-            if n<=9:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_avp:
+                continue
             else:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/AVP/Syll_Onset_Reduced_Test_' + str(n) + '.npy')))
         for n in range(20):
-            if n<=9:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_lvt:
+                continue
             else:
-                classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+                    classes_onset = np.concatenate((classes_onset, np.load('data/interim/LVT/Syll_Onset_Reduced_Test_' + str(n) + '.npy')))
         classes_onset = classes_onset[1:]
 
         classes_nucleus = np.zeros(1)
         for n in range(28):
-            if n<=9:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_avp:
+                continue
             else:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Reduced_Test_' + str(n) + '.npy')))
         for n in range(20):
-            if n<=9:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_lvt:
+                continue
             else:
-                classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+                    classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Test_' + str(n) + '.npy')))
         classes_nucleus = classes_nucleus[1:]
 
         num_onset = np.max(classes_onset)+1
@@ -167,15 +222,25 @@ for m in range(len(modes)):
 
         classes_str = np.zeros(1)
         for n in range(28):
-            if n<=9:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_avp:
+                continue
             else:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Test_' + str(n) + '.npy')))
         for n in range(20):
-            if n<=9:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_lvt:
+                continue
             else:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Test_' + str(n) + '.npy')))
         classes_str = classes_str[1:]
 
         classes = np.zeros(len(classes_str))
@@ -195,15 +260,25 @@ for m in range(len(modes)):
 
         classes_str = np.zeros(1)
         for n in range(28):
-            if n<=9:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_avp:
+                continue
             else:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/AVP/Classes_Test_' + str(n) + '.npy')))
         for n in range(20):
-            if n<=9:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+            if n in list_test_participants_lvt:
+                continue
             else:
-                classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+                if n<=9:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Test_0' + str(n) + '.npy')))
+                else:
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+                    classes_str = np.concatenate((classes_str, np.load('data/interim/LVT/Classes_Test_' + str(n) + '.npy')))
         classes_str = classes_str[1:]
 
         classes = np.zeros(len(classes_str))
@@ -218,6 +293,161 @@ for m in range(len(modes)):
                 classes[n] = 1
 
         num_classes = np.max(classes)+1
+
+    elif 'sound' in mode:
+
+        classes = np.zeros(1)
+        for n in range(28):
+            if n in list_test_participants_avp:
+                continue
+            else:
+                if n<=9:
+                    classes_str = np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='kd':
+                            classes_pre[nc] = (n*4)
+                        elif classes_str[nc]=='sd':
+                            classes_pre[nc] = (n*4)+1
+                        elif classes_str[nc]=='hhc':
+                            classes_pre[nc] = (n*4)+2
+                        elif classes_str[nc]=='hho':
+                            classes_pre[nc] = (n*4)+3
+                    classes = np.concatenate((classes, classes_pre))
+                    classes_str = np.load('data/interim/AVP/Classes_Test_0' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='kd':
+                            classes_pre[nc] = (n*4)
+                        elif classes_str[nc]=='sd':
+                            classes_pre[nc] = (n*4)+1
+                        elif classes_str[nc]=='hhc':
+                            classes_pre[nc] = (n*4)+2
+                        elif classes_str[nc]=='hho':
+                            classes_pre[nc] = (n*4)+3
+                    classes = np.concatenate((classes, classes_pre))
+                else:
+                    classes_str = np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='kd':
+                            classes_pre[nc] = (n*4)
+                        elif classes_str[nc]=='sd':
+                            classes_pre[nc] = (n*4)+1
+                        elif classes_str[nc]=='hhc':
+                            classes_pre[nc] = (n*4)+2
+                        elif classes_str[nc]=='hho':
+                            classes_pre[nc] = (n*4)+3
+                    classes = np.concatenate((classes, classes_pre))
+                    classes_str = np.load('data/interim/AVP/Classes_Test_' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='kd':
+                            classes_pre[nc] = (n*4)
+                        elif classes_str[nc]=='sd':
+                            classes_pre[nc] = (n*4)+1
+                        elif classes_str[nc]=='hhc':
+                            classes_pre[nc] = (n*4)+2
+                        elif classes_str[nc]=='hho':
+                            classes_pre[nc] = (n*4)+3
+                    classes = np.concatenate((classes, classes_pre))
+        for n in range(20):
+            if n in list_test_participants_lvt:
+                continue
+            else:
+                if n<=9:
+                    classes_str = np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='Kick':
+                            classes_pre[nc] = (28*4) + (n*3)
+                        elif classes_str[nc]=='Snare':
+                            classes_pre[nc] = (28*4) + (n*3)+1
+                        elif classes_str[nc]=='HH':
+                            classes_pre[nc] = (28*4) + (n*3)+2
+                    classes = np.concatenate((classes, classes_pre))
+                    classes_str = np.load('data/interim/LVT/Classes_Test_0' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='Kick':
+                            classes_pre[nc] = (28*4) + (n*3)
+                        elif classes_str[nc]=='Snare':
+                            classes_pre[nc] = (28*4) + (n*3)+1
+                        elif classes_str[nc]=='HH':
+                            classes_pre[nc] = (28*4) + (n*3)+2
+                    classes = np.concatenate((classes, classes_pre))
+                else:
+                    classes_str = np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='Kick':
+                            classes_pre[nc] = (28*4) + (n*3)
+                        elif classes_str[nc]=='Snare':
+                            classes_pre[nc] = (28*4) + (n*3)+1
+                        elif classes_str[nc]=='HH':
+                            classes_pre[nc] = (28*4) + (n*3)+2
+                    classes = np.concatenate((classes, classes_pre))
+                    classes_str = np.load('data/interim/LVT/Classes_Test_' + str(n) + '.npy')
+                    classes_pre = np.zeros(len(classes_str))
+                    for nc in range(len(classes_str)):
+                        if classes_str[nc]=='Kick':
+                            classes_pre[nc] = (28*4) + (n*3)
+                        elif classes_str[nc]=='Snare':
+                            classes_pre[nc] = (28*4) + (n*3)+1
+                        elif classes_str[nc]=='HH':
+                            classes_pre[nc] = (28*4) + (n*3)+2
+                    classes = np.concatenate((classes, classes_pre))
+        classes = classes[1:]
+
+        num_classes = int(np.max(classes)+1)
+
+        classes_pre_siamese_onset = np.zeros(1)
+        for n in range(28):
+            if n in list_test_participants_avp:
+                continue
+            else:
+                if n<=9:
+                    classes_pre_siamese_onset = np.concatenate((classes_pre_siamese_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+                else:
+                    classes_pre_siamese_onset = np.concatenate((classes_pre_siamese_onset, np.load('data/interim/AVP/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n in list_test_participants_lvt:
+                continue
+            else:
+                if n<=9:
+                    classes_pre_siamese_onset = np.concatenate((classes_pre_siamese_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+                else:
+                    classes_pre_siamese_onset = np.concatenate((classes_pre_siamese_onset, np.load('data/interim/LVT/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+        classes_pre_siamese_onset = classes_pre_siamese_onset[1:]
+
+        classes_pre_siamese_nucleus = np.zeros(1)
+        for n in range(28):
+            if n in list_test_participants_avp:
+                continue
+            else:
+                if n<=9:
+                    classes_pre_siamese_nucleus = np.concatenate((classes_pre_siamese_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+                else:
+                    classes_pre_siamese_nucleus = np.concatenate((classes_pre_siamese_nucleus, np.load('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+        for n in range(20):
+            if n in list_test_participants_lvt:
+                continue
+            else:
+                if n<=9:
+                    classes_pre_siamese_nucleus = np.concatenate((classes_pre_siamese_nucleus, np.load('data/interim/LVT/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+                else:
+                    classes_pre_siamese_nucleus = np.concatenate((classes_pre_siamese_nucleus, np.load('data/interim/LVT/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+        classes_pre_siamese_nucleus = classes_pre_siamese_nucleus[1:]
+
+        cmb = []
+        classes_syllables = np.zeros(len(classes_pre_siamese_onset))
+        for n in range(len(classes_pre_siamese_onset)):
+            combination = [classes_pre_siamese_onset[n],classes_pre_siamese_nucleus[n]]
+            if combination not in cmb:
+                cmb.append(combination)
+                classes_syllables[n] = cmb.index(combination)
+            else:
+                classes_syllables[n] = cmb.index(combination)
 
     if 'syll' in mode:
 
