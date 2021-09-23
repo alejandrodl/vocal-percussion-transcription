@@ -15,9 +15,10 @@ from sklearn.metrics import accuracy_score
 
 # Global parameters
 
-percentage_train = 75
+num_crossval = 5
+percentage_train = 80
 #modes = ['classall','classred','syllall','syllred','phonall','phonred','sound']
-modes = ['sound']
+modes = ['phonall','phonred','sound']
 mode_feat = 'eng_all'
 
 list_test_participants_avp = [8,10,18,23]
@@ -103,16 +104,10 @@ for m in range(len(modes)):
         std = np.std(dataset[:,feat])
         dataset[:,feat] = (dataset[:,feat]-mean)/(std+1e-16)
 
-    cutoff_train = int((percentage_train/100)*dataset.shape[0])
-
-    dataset_train = dataset[:cutoff_train]
-    dataset_test = dataset[cutoff_train:]
+    cutoff_test = int(((100-percentage_train)/100)*dataset.shape[0])
     
     np.random.seed(0)
-    np.random.shuffle(dataset_train)
-
-    np.random.seed(0)
-    np.random.shuffle(dataset_test)
+    np.random.shuffle(dataset)
 
     # Load and process classes
 
@@ -461,109 +456,135 @@ for m in range(len(modes)):
             else:
                 classes[n] = combinations.index(combination)
 
-        num_classes = np.max(classes)+1
-        
-        classes_train = classes[:cutoff_train].astype('float32')
-        classes_test = classes[cutoff_train:].astype('float32')
-
         np.random.seed(0)
-        np.random.shuffle(classes_train)
-        
-        np.random.seed(0)
-        np.random.shuffle(classes_test)
+        np.random.shuffle(classes)
 
-        print('Calculating importances...')
+        for cv in range(num_crossval):
 
-        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+            dataset_cv = dataset.copy()
+            classes_cv = classes.copy()
 
-        forest.fit(dataset_train, classes_train)
-        results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
+            idx_start = cv*cutoff_test
+            idx_end = (cv+1)*cutoff_test
 
-        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
-        names_sorted = features_names[indices_sorted.tolist()]
+            idxs_test = np.arange(idx_start,idx_end).tolist()
 
-        np.save('data/processed/' + mode + '/names_sorted_eng_' + mode, names_sorted)
-        np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
-        np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode, importances_sorted)
+            dataset_train = np.delete(dataset_cv,idxs_test,axis=0).astype('float32')
+            dataset_test = dataset_cv[idx_start:idx_end].astype('float32')
+
+            classes_train = np.delete(classes_cv,idxs_test,axis=0).astype('float32')
+            classes_test = classes_cv[idx_start:idx_end].astype('float32')
+
+            print('Calculating importances...')
+
+            forest = RandomForestClassifier(n_estimators=200,random_state=0)
+
+            forest.fit(dataset_train, classes_train)
+            results = permutation_importance(forest, dataset_test, classes_test, n_repeats=5, random_state=0)
+
+            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+            importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
+            names_sorted = features_names[indices_sorted.tolist()]
+
+            np.save('data/processed/' + mode + '/names_sorted_eng_' + mode + '_' + str(cv), names_sorted)
+            np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode + '_' + str(cv), indices_sorted)
+            np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode + '_' + str(cv), importances_sorted)
 
     elif 'phon' in mode:
+
+        np.random.seed(0)
+        np.random.shuffle(classes_onset)
+
+        np.random.seed(0)
+        np.random.shuffle(classes_nucleus)
+
+        for cv in range(num_crossval):
+
+            dataset_cv = dataset.copy()
+            classes_onset_cv = classes_onset.copy()
+            classes_nucleus_cv = classes_nucleus.copy()
+
+            idx_start = cv*cutoff_test
+            idx_end = (cv+1)*cutoff_test
+
+            idxs_test = np.arange(idx_start,idx_end).tolist()
+
+            dataset_train = np.delete(dataset_cv,idxs_test,axis=0).astype('float32')
+            dataset_test = dataset_cv[idx_start:idx_end].astype('float32')
+
+            classes_train_onset = np.delete(classes_onset_cv,idxs_test,axis=0).astype('float32')
+            classes_train_nucleus = np.delete(classes_nucleus_cv,idxs_test,axis=0).astype('float32')
+            classes_test_onset = classes_onset_cv[idx_start:idx_end].astype('float32')
+            classes_test_nucleus = classes_nucleus_cv[idx_start:idx_end].astype('float32')
+
+            print('Calculating onset importances...')
+
+            forest = RandomForestClassifier(n_estimators=200,random_state=0)
+
+            forest.fit(dataset_train, classes_train_onset)
+            results = permutation_importance(forest, dataset_test, classes_test_onset, n_repeats=5, random_state=0)
+
+            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+            importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
+            names_sorted = features_names[indices_sorted.tolist()]
+
+            np.save('data/processed/' + mode + '/names_sorted_onset_eng_' + mode + '_' + str(cv), names_sorted)
+            np.save('data/processed/' + mode + '/indices_sorted_onset_eng_' + mode + '_' + str(cv), indices_sorted)
+            np.save('data/processed/' + mode + '/importances_sorted_onset_eng_' + mode + '_' + str(cv), importances_sorted)
+
+            print('Calculating nucleus importances...')
+
+            forest = RandomForestClassifier(n_estimators=200,random_state=0)
+
+            forest.fit(dataset_train, classes_train_nucleus)
+            results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=5, random_state=0)
+
+            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+            importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
+            names_sorted = features_names[indices_sorted.tolist()]
+
+            np.save('data/processed/' + mode + '/names_sorted_nucleus_eng_' + mode + '_' + str(cv), names_sorted)
+            np.save('data/processed/' + mode + '/indices_sorted_nucleus_eng_' + mode + '_' + str(cv), indices_sorted)
+            np.save('data/processed/' + mode + '/importances_sorted_nucleus_eng_' + mode + '_' + str(cv), importances_sorted)
         
-        classes_train_onset = classes_onset[:cutoff_train].astype('float32')
-        classes_train_nucleus = classes_nucleus[:cutoff_train].astype('float32')
-        classes_test_onset = classes_onset[cutoff_train:].astype('float32')
-        classes_test_nucleus = classes_nucleus[cutoff_train:].astype('float32')
-
-        np.random.seed(0)
-        np.random.shuffle(classes_train_onset)
-        
-        np.random.seed(0)
-        np.random.shuffle(classes_train_nucleus)
-
-        np.random.seed(0)
-        np.random.shuffle(classes_test_onset)
-        
-        np.random.seed(0)
-        np.random.shuffle(classes_test_nucleus)
-
-        print('Calculating onset importances...')
-
-        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
-
-        forest.fit(dataset_train, classes_train_onset)
-        results = permutation_importance(forest, dataset_test, classes_test_onset, n_repeats=10, random_state=0)
-
-        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
-        names_sorted = features_names[indices_sorted.tolist()]
-
-        np.save('data/processed/' + mode + '/names_sorted_onset_eng_' + mode, names_sorted)
-        np.save('data/processed/' + mode + '/indices_sorted_onset_eng_' + mode, indices_sorted)
-        np.save('data/processed/' + mode + '/importances_sorted_onset_eng_' + mode, importances_sorted)
-
-        print('Calculating nucleus importances...')
-
-        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
-
-        forest.fit(dataset_train, classes_train_nucleus)
-        results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=10, random_state=0)
-
-        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
-        names_sorted = features_names[indices_sorted.tolist()]
-
-        np.save('data/processed/' + mode + '/names_sorted_nucleus_eng_' + mode, names_sorted)
-        np.save('data/processed/' + mode + '/indices_sorted_nucleus_eng_' + mode, indices_sorted)
-        np.save('data/processed/' + mode + '/importances_sorted_nucleus_eng_' + mode, importances_sorted)
-
     elif 'class' in mode or 'sound' in mode:
 
         if mode=='sound':
             if not os.path.isdir('data/processed/' + mode):
                 os.mkdir('data/processed/' + mode)
 
-        classes_train = classes[:cutoff_train].astype('float32')
-        classes_test = classes[cutoff_train:].astype('float32')
-
         np.random.seed(0)
-        np.random.shuffle(classes_train)
-        
-        np.random.seed(0)
-        np.random.shuffle(classes_test)
+        np.random.shuffle(classes)
 
-        print('Calculating importances...')
-    
-        forest = RandomForestClassifier(n_estimators=1000,random_state=0)
+        for cv in range(num_crossval):
 
-        forest.fit(dataset_train, classes_train)
-        results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=0)
+            dataset_cv = dataset.copy()
+            classes_cv = classes.copy()
 
-        indices_sorted = np.array(results.importances_mean).argsort()[::-1]
-        importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
-        names_sorted = features_names[indices_sorted.tolist()]
+            idx_start = cv*cutoff_test
+            idx_end = (cv+1)*cutoff_test
 
-        np.save('data/processed/' + mode + '/names_sorted_eng_' + mode, names_sorted)
-        np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
-        np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode, importances_sorted)
+            idxs_test = np.arange(idx_start,idx_end).tolist()
+
+            dataset_train = np.delete(dataset_cv,idxs_test,axis=0).astype('float32')
+            dataset_test = dataset_cv[idx_start:idx_end].astype('float32')
+
+            classes_train = np.delete(classes_cv,idxs_test,axis=0).astype('float32')
+            classes_test = classes_cv[idx_start:idx_end].astype('float32')
+
+            print('Calculating importances...')
+
+            forest = RandomForestClassifier(n_estimators=200,random_state=0)
+
+            forest.fit(dataset_train, classes_train)
+            results = permutation_importance(forest, dataset_test, classes_test, n_repeats=5, random_state=0)
+
+            indices_sorted = np.array(results.importances_mean).argsort()[::-1]
+            importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
+            names_sorted = features_names[indices_sorted.tolist()]
+
+            np.save('data/processed/' + mode + '/names_sorted_eng_' + mode + '_' + str(cv), names_sorted)
+            np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode + '_' + str(cv), indices_sorted)
+            np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode + '_' + str(cv), importances_sorted)
         
 
