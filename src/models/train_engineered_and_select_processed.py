@@ -536,7 +536,11 @@ for m in range(len(modes)):
         np.save('data/processed/' + mode + '/indices_sorted_nucleus_eng_' + mode, indices_sorted)
         np.save('data/processed/' + mode + '/importances_sorted_nucleus_eng_' + mode, importances_sorted)
 
-    elif 'class' in mode:
+    elif 'class' in mode or 'sound' in mode:
+
+        if mode=='sound':
+            if not os.path.isdir('data/processed/' + mode):
+                os.mkdir('data/processed/' + mode)
 
         classes_train = classes[:cutoff_train].astype('float32')
         classes_test = classes[cutoff_train:].astype('float32')
@@ -558,15 +562,8 @@ for m in range(len(modes)):
         importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
         names_sorted = features_names[indices_sorted.tolist()]
 
-        print(indices_sorted.shape)
-        print(importances_sorted.shape)
-        print(names_sorted.shape)
-
-        print(indices_sorted)
-        print(importances_sorted)
-        print(names_sorted)
-
         np.save('data/processed/' + mode + '/names_sorted_eng_' + mode, names_sorted)
         np.save('data/processed/' + mode + '/indices_sorted_eng_' + mode, indices_sorted)
         np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode, importances_sorted)
+        
 
