@@ -27,7 +27,7 @@ frame_size = '1024'
 latent_dim = 32
 
 ##### This is the main loop with the "modes", "num_crossval", and "num_iterations" parameters. From here to the next
-# stop point in line 322 it's all about loading the classes vectors and counting the number of unique classes, in
+# stop point in line 323 it's all about loading the classes vectors and counting the number of unique classes, in
 # order to load the models, so don't worry about the code in-between (the classes vectors vary between loop iterations).
 
 for m in range(len(modes)):
@@ -331,8 +331,6 @@ for m in range(len(modes)):
             model.built = True
             model.load_weights('models/' + mode + '/pretrained_' + mode + '_' + str(latent_dim) + '_' + str(cv) + '_' + str(it) + '.h5')
 
-            # Compute processed features
-
             part_indices = ['03','03','03','04','05','06','07','09','09','10','10','10','11','11','14',
                             '14','15','15','16','18','20','23','23','24','24','25','25','25','26','27']
             sound_indices = [101,48,80,25,23,23,85,73,102,13,38,63,13,63,
@@ -360,6 +358,6 @@ for m in range(len(modes)):
                 Spectrogram = np.log(Spectrogram+1e-4)
                 Spectrogram = (Spectrogram-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
 
-                ##### You can do your thing below.
+                ##### You can do your thing below
 
 
