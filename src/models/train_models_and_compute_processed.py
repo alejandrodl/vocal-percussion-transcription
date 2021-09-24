@@ -49,6 +49,13 @@ class EarlyStopping_Phoneme(tf.keras.callbacks.Callback):
         if self.stopped_epoch > 0:
             print("Epoch %05d: early stopping" % (self.stopped_epoch + 1))
 
+    
+def set_seeds(seed):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
+
 
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
@@ -65,12 +72,14 @@ if gpus:
 
 # Global parameters
 
-percentage_train = 85
-num_iterations = 10 # Change to 1 to train one model per mode (Vinod)
+percentage_train = 80
+
+num_crossval = 5
+num_iterations = 5
 
 #modes = ['siamese','vae','classall','classred','syllall','syllred','phonall','phonred']
 modes = ['siamese','vae','classall','classred','syllall','syllred','phonall','phonred']
-min_acc = [0.40,0.45,0.25,0.30,0.40,0.45]
+min_acc = [0.40,0.45,0.10,0.15,0.40,0.45]
 
 # Data parameters
 
@@ -78,7 +87,7 @@ frame_size = '1024'
 
 # Network parameters
 
-latent_dims = [16,32]  # Change to [32] to only train models that output 32 embeddings (Vinod)
+latent_dims = [16,32]
 
 # Training parameters
 
@@ -103,9 +112,6 @@ list_test_participants_lvt = [0,6,7,13]
 # Main loop
 
 for m in range(len(modes)):
-
-    if m==0 or m==1:
-        continue
 
     mode = modes[m]
 
@@ -361,503 +367,523 @@ for m in range(len(modes)):
         pretrain_dataset = (pretrain_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
         pretrain_dataset = np.log(pretrain_dataset+1e-4)
         pretrain_dataset = (pretrain_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+
+        # Cross-Validation
+
+        cutoff_test = int(((100-percentage_train)/100)*pretrain_dataset.shape[0])
         
-        # Data preparation
+        for cv in range(num_crossval):
 
-        cutoff_train = int((percentage_train/100)*pretrain_dataset.shape[0])
-        pretrain_dataset_train = pretrain_dataset[:cutoff_train]
-        pretrain_dataset_test = pretrain_dataset[cutoff_train:]
+            idx_start = cv*cutoff_test
+            idx_end = (cv+1)*cutoff_test
+            idxs_test = np.arange(idx_start,idx_end).tolist()
 
-        pretrain_dataset_train = np.expand_dims(pretrain_dataset_train,axis=-1).astype('float32')
-        pretrain_dataset_test = np.expand_dims(pretrain_dataset_test,axis=-1).astype('float32')
+            pretrain_dataset_cv = pretrain_dataset.copy()
+            pretrain_dataset_train = np.delete(pretrain_dataset_cv,idxs_test,axis=0).astype('float32')
+            pretrain_dataset_test = pretrain_dataset_cv[idx_start:idx_end].astype('float32')
 
-        print(pretrain_dataset_train.shape)
-        print(pretrain_dataset_test.shape)
-        
-        np.random.seed(0)
-        np.random.shuffle(pretrain_dataset_train)
+            pretrain_dataset_train = np.expand_dims(pretrain_dataset_train,axis=-1).astype('float32')
+            pretrain_dataset_test = np.expand_dims(pretrain_dataset_test,axis=-1).astype('float32')
 
-        np.random.seed(0)
-        np.random.shuffle(pretrain_dataset_test)
-
-        # Load and process classes
-
-        if 'syllall' in mode or 'phonall' in mode:
-
-            classes_onset = np.zeros(1)
-            for n in range(28):
-                if n in list_test_participants_avp:
-                    continue
-                else:
-                    if n<=9:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Test_Aug_' + str(n) + '.npy')))
-            for n in range(20):
-                if n in list_test_participants_lvt:
-                    continue
-                else:
-                    if n<=9:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Test_Aug_' + str(n) + '.npy')))
-            classes_onset = classes_onset[1:]
-
-            classes_nucleus = np.zeros(1)
-            for n in range(28):
-                if n in list_test_participants_avp:
-                    continue
-                else:
-                    if n<=9:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Test_Aug_' + str(n) + '.npy')))
-            for n in range(20):
-                if n in list_test_participants_lvt:
-                    continue
-                else:
-                    if n<=9:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Test_Aug_' + str(n) + '.npy')))
-            classes_nucleus = classes_nucleus[1:]
-
-            train_classes_onset = classes_onset[:cutoff_train].astype('float32')
-            train_classes_nucleus = classes_nucleus[:cutoff_train].astype('float32')
-            test_classes_onset = classes_onset[cutoff_train:].astype('float32')
-            test_classes_nucleus = classes_nucleus[cutoff_train:].astype('float32')
-
-            num_onset = np.max(classes_onset)+1
-            num_nucleus = np.max(classes_nucleus)+1
-
-        elif 'syllred' in mode or 'phonred' in mode:
-
-            classes_onset = np.zeros(1)
-            for n in range(28):
-                if n in list_test_participants_avp:
-                    continue
-                else:
-                    if n<=9:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Test_Aug_' + str(n) + '.npy')))
-            for n in range(20):
-                if n in list_test_participants_lvt:
-                    continue
-                else:
-                    if n<=9:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
-                        classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Test_Aug_' + str(n) + '.npy')))
-            classes_onset = classes_onset[1:]
-
-            classes_nucleus = np.zeros(1)
-            for n in range(28):
-                if n in list_test_participants_avp:
-                    continue
-                else:
-                    if n<=9:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_' + str(n) + '.npy')))
-            for n in range(20):
-                if n in list_test_participants_lvt:
-                    continue
-                else:
-                    if n<=9:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
-                        classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Test_Aug_' + str(n) + '.npy')))
-            classes_nucleus = classes_nucleus[1:]
-
-            num_onset = np.max(classes_onset)+1
-            num_nucleus = np.max(classes_nucleus)+1
-
-        elif 'classall' in mode:
-
-            classes_str = np.zeros(1)
-            for n in range(28):
-                if n in list_test_participants_avp:
-                    continue
-                else:
-                    if n<=9:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_' + str(n) + '.npy')))
-            for n in range(20):
-                if n in list_test_participants_lvt:
-                    continue
-                else:
-                    if n<=9:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_' + str(n) + '.npy')))
-            classes_str = classes_str[1:]
-
-            classes = np.zeros(len(classes_str))
-            for n in range(len(classes_str)):
-                if classes_str[n]=='kd' or classes_str[n]=='Kick':
-                    classes[n] = 0
-                elif classes_str[n]=='sd' or classes_str[n]=='Snare':
-                    classes[n] = 1
-                elif classes_str[n]=='hhc' or classes_str[n]=='HH':
-                    classes[n] = 2
-                elif classes_str[n]=='hho':
-                    classes[n] = 3
-
-            num_classes = np.max(classes)+1
-
-        elif 'classred' in mode:
-
-            classes_str = np.zeros(1)
-            for n in range(28):
-                if n in list_test_participants_avp:
-                    continue
-                else:
-                    if n<=9:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_' + str(n) + '.npy')))
-            for n in range(20):
-                if n in list_test_participants_lvt:
-                    continue
-                else:
-                    if n<=9:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
-                        classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_' + str(n) + '.npy')))
-            classes_str = classes_str[1:]
-
-            classes = np.zeros(len(classes_str))
-            for n in range(len(classes_str)):
-                if classes_str[n]=='kd' or classes_str[n]=='Kick':
-                    classes[n] = 0
-                elif classes_str[n]=='sd' or classes_str[n]=='Snare':
-                    classes[n] = 0
-                elif classes_str[n]=='hhc' or classes_str[n]=='HH':
-                    classes[n] = 1
-                elif classes_str[n]=='hho':
-                    classes[n] = 1
-
-            num_classes = np.max(classes)+1
-
-        # Further class processing
-
-        if 'syll' in mode:
-
-            combinations = []
-            classes = np.zeros(len(classes_onset))
-            for n in range(len(classes_onset)):
-                combination = [classes_onset[n],classes_nucleus[n]]
-                if combination not in combinations:
-                    combinations.append(combination)
-                    classes[n] = combinations.index(combination)
-                else:
-                    classes[n] = combinations.index(combination)
-
-            num_classes = np.max(classes)+1
-            
-            pretrain_classes_train = classes[:cutoff_train].astype('float32')
-            pretrain_classes_test = classes[cutoff_train:].astype('float32')
-
-            np.random.seed(0)
-            np.random.shuffle(pretrain_classes_train)
+            print(pretrain_dataset_train.shape)
+            print(pretrain_dataset_test.shape)
             
             np.random.seed(0)
-            np.random.shuffle(pretrain_classes_test)
-
-        elif 'phon' in mode:
-            
-            pretrain_classes_train_onset = classes_onset[:cutoff_train].astype('float32')
-            pretrain_classes_train_nucleus = classes_nucleus[:cutoff_train].astype('float32')
-            pretrain_classes_test_onset = classes_onset[cutoff_train:].astype('float32')
-            pretrain_classes_test_nucleus = classes_nucleus[cutoff_train:].astype('float32')
+            np.random.shuffle(pretrain_dataset_train)
 
             np.random.seed(0)
-            np.random.shuffle(pretrain_classes_train_onset)
-            
-            np.random.seed(0)
-            np.random.shuffle(pretrain_classes_train_nucleus)
+            np.random.shuffle(pretrain_dataset_test)
 
-            np.random.seed(0)
-            np.random.shuffle(pretrain_classes_test_onset)
-            
-            np.random.seed(0)
-            np.random.shuffle(pretrain_classes_test_nucleus)
+            # Load and process classes
 
-        elif 'class' in mode or 'siamese' in mode:
+            if 'syllall' in mode or 'phonall' in mode:
 
-            pretrain_classes_train = classes[:cutoff_train].astype('float32')
-            pretrain_classes_test = classes[cutoff_train:].astype('float32')
+                classes_onset = np.zeros(1)
+                for n in range(28):
+                    if n in list_test_participants_avp:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Test_Aug_' + str(n) + '.npy')))
+                for n in range(20):
+                    if n in list_test_participants_lvt:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_Aug_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Train_Aug_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Test_Aug_' + str(n) + '.npy')))
+                classes_onset = classes_onset[1:]
 
-            np.random.seed(0)
-            np.random.shuffle(pretrain_classes_train)
-            
-            np.random.seed(0)
-            np.random.shuffle(pretrain_classes_test)
+                classes_nucleus = np.zeros(1)
+                for n in range(28):
+                    if n in list_test_participants_avp:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Test_Aug_' + str(n) + '.npy')))
+                for n in range(20):
+                    if n in list_test_participants_lvt:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_Aug_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Train_Aug_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Test_Aug_' + str(n) + '.npy')))
+                classes_nucleus = classes_nucleus[1:]
 
-        # Train models
+                train_classes_onset = np.delete(classes_onset,idxs_test,axis=0).astype('float32')
+                test_classes_onset = classes_onset[idx_start:idx_end].astype('float32')
 
-        for it in range(num_iterations):
+                train_classes_nucleus = np.delete(classes_nucleus,idxs_test,axis=0).astype('float32')
+                test_classes_nucleus = classes_nucleus[idx_start:idx_end].astype('float32')
 
-            validation_accuracy = 0
-            validation_loss = np.inf
+                num_onset = np.max(classes_onset)+1
+                num_nucleus = np.max(classes_nucleus)+1
 
-            if mode=='vae':
+            elif 'syllred' in mode or 'phonred' in mode:
 
-                while validation_loss > 0.003:
+                classes_onset = np.zeros(1)
+                for n in range(28):
+                    if n in list_test_participants_avp:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/AVP/Syll_Onset_Reduced_Test_Aug_' + str(n) + '.npy')))
+                for n in range(20):
+                    if n in list_test_participants_lvt:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Train_Aug_' + str(n) + '.npy')))
+                            classes_onset = np.concatenate((classes_onset, np.load('../../data/interim/LVT/Syll_Onset_Reduced_Test_Aug_' + str(n) + '.npy')))
+                classes_onset = classes_onset[1:]
 
-                    model = VAE_Interim(latent_dim)
+                classes_nucleus = np.zeros(1)
+                for n in range(28):
+                    if n in list_test_participants_avp:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/AVP/Syll_Nucleus_Reduced_Test_Aug_' + str(n) + '.npy')))
+                for n in range(20):
+                    if n in list_test_participants_lvt:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_0' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Train_Aug_' + str(n) + '.npy')))
+                            classes_nucleus = np.concatenate((classes_nucleus, np.load('../../data/interim/LVT/Syll_Nucleus_Reduced_Test_Aug_' + str(n) + '.npy')))
+                classes_nucleus = classes_nucleus[1:]
 
-                    optimizer = tf.keras.optimizers.Adam(lr=5*1e-4)
-                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
-                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
+                num_onset = np.max(classes_onset)+1
+                num_nucleus = np.max(classes_nucleus)+1
 
-                    with tf.device(gpu_name):
+            elif 'classall' in mode:
 
-                        model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError(), metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=False)
-                        history = model.fit(pretrain_dataset_train, pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_dataset_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
-                        validation_loss = min(history.history['val_loss'])
-                        print(validation_loss)
+                classes_str = np.zeros(1)
+                for n in range(28):
+                    if n in list_test_participants_avp:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_' + str(n) + '.npy')))
+                for n in range(20):
+                    if n in list_test_participants_lvt:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_' + str(n) + '.npy')))
+                classes_str = classes_str[1:]
+
+                classes = np.zeros(len(classes_str))
+                for n in range(len(classes_str)):
+                    if classes_str[n]=='kd' or classes_str[n]=='Kick':
+                        classes[n] = 0
+                    elif classes_str[n]=='sd' or classes_str[n]=='Snare':
+                        classes[n] = 1
+                    elif classes_str[n]=='hhc' or classes_str[n]=='HH':
+                        classes[n] = 2
+                    elif classes_str[n]=='hho':
+                        classes[n] = 3
+
+                num_classes = np.max(classes)+1
+
+            elif 'classred' in mode:
+
+                classes_str = np.zeros(1)
+                for n in range(28):
+                    if n in list_test_participants_avp:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/AVP/Classes_Test_Aug_' + str(n) + '.npy')))
+                for n in range(20):
+                    if n in list_test_participants_lvt:
+                        continue
+                    else:
+                        if n<=9:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_0' + str(n) + '.npy')))
+                        else:
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')))
+                            classes_str = np.concatenate((classes_str, np.load('../../data/interim/LVT/Classes_Test_Aug_' + str(n) + '.npy')))
+                classes_str = classes_str[1:]
+
+                classes = np.zeros(len(classes_str))
+                for n in range(len(classes_str)):
+                    if classes_str[n]=='kd' or classes_str[n]=='Kick':
+                        classes[n] = 0
+                    elif classes_str[n]=='sd' or classes_str[n]=='Snare':
+                        classes[n] = 0
+                    elif classes_str[n]=='hhc' or classes_str[n]=='HH':
+                        classes[n] = 1
+                    elif classes_str[n]=='hho':
+                        classes[n] = 1
+
+                num_classes = np.max(classes)+1
+
+            # Further class processing
+
+            if 'syll' in mode:
+
+                combinations = []
+                classes = np.zeros(len(classes_onset))
+                for n in range(len(classes_onset)):
+                    combination = [classes_onset[n],classes_nucleus[n]]
+                    if combination not in combinations:
+                        combinations.append(combination)
+                        classes[n] = combinations.index(combination)
+                    else:
+                        classes[n] = combinations.index(combination)
+
+                num_classes = np.max(classes)+1
+                
+                pretrain_classes_train = np.delete(classes,idxs_test,axis=0).astype('float32')
+                pretrain_classes_test = classes[idx_start:idx_end].astype('float32')
+
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_train)
+                
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_test)
 
             elif 'phon' in mode:
 
-                while validation_accuracy < min_acc[m-2]:
+                pretrain_classes_train_onset = np.delete(classes_onset,idxs_test,axis=0).astype('float32')
+                pretrain_classes_test_onset = classes_onset[idx_start:idx_end].astype('float32')
 
-                    model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=5*1e-4)
+                pretrain_classes_train_nucleus = np.delete(classes_nucleus,idxs_test,axis=0).astype('float32')
+                pretrain_classes_test_nucleus = classes_nucleus[idx_start:idx_end].astype('float32')
 
-                    early_stopping = EarlyStopping_Phoneme(patience=7)
-                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_onset_accuracy', patience=14)
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_train_onset)
+                
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_train_nucleus)
 
-                    with tf.device(gpu_name):
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_test_onset)
+                
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_test_nucleus)
 
-                        history = model.fit(pretrain_dataset_train, [pretrain_classes_train_onset, pretrain_classes_train_nucleus], batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,[pretrain_classes_test_onset,pretrain_classes_test_nucleus]), callbacks=[early_stopping,lr_scheduler], class_weight=class_weight, shuffle=True)  # , verbose=0
-                        validation_accuracy = (history.history['val_onset_accuracy'][-patience_early-1]+history.history['val_nucleus_accuracy'][-patience_early-1])/2
-                        print(validation_accuracy)
+            elif 'class' in mode or 'siamese' in mode:
 
-            elif 'siamese' in mode:
+                pretrain_classes_train = np.delete(classes,idxs_test,axis=0).astype('float32')
+                pretrain_classes_test = classes[idx_start:idx_end].astype('float32')
 
-                while validation_loss > 0.2:
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_train)
+                
+                np.random.seed(0)
+                np.random.shuffle(pretrain_classes_test)
 
-                    model = CNN_Interim_Siamese(latent_dim)
+            # Train models
 
-                    optimizer = tf.keras.optimizers.Adam(lr=1e-5)
-                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
-                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=3)
+            for it in range(num_iterations):
 
-                    with tf.device(gpu_name):
+                set_seeds(it)
 
-                        model.compile(optimizer=optimizer, loss=tfa.losses.contrastive_loss)
-                        history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=512, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
-                        validation_loss = min(history.history['val_loss'])
-                        print(validation_loss)
+                validation_accuracy = 0
+                validation_loss = np.inf
 
-            else:
+                if mode=='vae':
 
-                if mode=='classall' or mode=='classred':
-                    lr = 1e-4
-                elif mode=='syllall' or mode=='syllred':
-                    lr = 3*1e-4
+                    while validation_loss > 0.003:
 
-                while validation_accuracy < min_acc[m-2]:
+                        set_seeds(it)
 
-                    model = CNN_Interim(num_classes, latent_dim)
+                        model = VAE_Interim(latent_dim)
 
-                    optimizer = tf.keras.optimizers.Adam(lr=lr)
-                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=patience_early)
-                    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', patience=patience_lr)
+                        optimizer = tf.keras.optimizers.Adam(lr=5*1e-4)
+                        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
+                        lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
 
-                    with tf.device(gpu_name):
+                        with tf.device(gpu_name):
 
-                        model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
-                        history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
-                        validation_accuracy = max(history.history['val_accuracy'])
-                        print(validation_accuracy)
+                            model.compile(optimizer=optimizer, loss=tf.keras.losses.MeanSquaredError(), metrics=None, loss_weights=None, weighted_metrics=None, run_eagerly=False)
+                            history = model.fit(pretrain_dataset_train, pretrain_dataset_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_dataset_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
+                            validation_loss = min(history.history['val_loss'])
+                            print(validation_loss)
 
-            model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(latent_dim) + '_' + str(it) + '.h5')
+                elif 'phon' in mode:
 
-            # Compute processed features
+                    while validation_accuracy < min_acc[m-2]:
 
-            print('Computing features...')
+                        set_seeds(it)
 
-            for part in list_test_participants_avp:
+                        model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=5*1e-4)
 
-                if part<=9:
-                    train_dataset = np.load('../../data/interim/AVP/Dataset_Train_0' + str(part) + '.npy')
-                    train_dataset_aug = np.load('../../data/interim/AVP/Dataset_Train_Aug_0' + str(part) + '.npy')
-                    test_dataset = np.load('../../data/interim/AVP/Dataset_Test_0' + str(part) + '.npy')
+                        early_stopping = EarlyStopping_Phoneme(patience=7)
+                        lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_onset_accuracy', patience=14)
+
+                        with tf.device(gpu_name):
+
+                            history = model.fit(pretrain_dataset_train, [pretrain_classes_train_onset, pretrain_classes_train_nucleus], batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,[pretrain_classes_test_onset,pretrain_classes_test_nucleus]), callbacks=[early_stopping,lr_scheduler], class_weight=class_weight, shuffle=True)  # , verbose=0
+                            validation_accuracy = (history.history['val_onset_accuracy'][-patience_early-1]+history.history['val_nucleus_accuracy'][-patience_early-1])/2
+                            print(validation_accuracy)
+
+                elif 'siamese' in mode:
+
+                    while validation_loss > 0.25:
+
+                        set_seeds(it)
+
+                        model = CNN_Interim_Siamese(latent_dim)
+
+                        optimizer = tf.keras.optimizers.Adam(lr=1e-5)
+                        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+                        lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=3)
+
+                        with tf.device(gpu_name):
+
+                            model.compile(optimizer=optimizer, loss=tfa.losses.contrastive_loss)
+                            history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=512, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
+                            validation_loss = min(history.history['val_loss'])
+                            print(validation_loss)
+
                 else:
-                    train_dataset = np.load('../../data/interim/AVP/Dataset_Train_' + str(part) + '.npy')
-                    train_dataset_aug = np.load('../../data/interim/AVP/Dataset_Train_Aug_' + str(part) + '.npy')
-                    test_dataset = np.load('../../data/interim/AVP/Dataset_Test_' + str(part) + '.npy')
 
-                train_dataset = (train_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
-                train_dataset = np.log(train_dataset+1e-4)
-                train_dataset = (train_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+                    if mode=='classall' or mode=='classred':
+                        lr = 1e-4
+                    elif mode=='syllall' or mode=='syllred':
+                        lr = 3*1e-4
 
-                train_dataset_aug = (train_dataset_aug-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
-                train_dataset_aug = np.log(train_dataset_aug+1e-4)
-                train_dataset_aug = (train_dataset_aug-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+                    while validation_accuracy < min_acc[m-2]:
 
-                test_dataset = (test_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
-                test_dataset = np.log(test_dataset+1e-4)
-                test_dataset = (test_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+                        set_seeds(it)
 
-                train_dataset = np.expand_dims(train_dataset,axis=-1).astype('float32')
-                train_dataset_aug = np.expand_dims(train_dataset_aug,axis=-1).astype('float32')
-                test_dataset = np.expand_dims(test_dataset,axis=-1).astype('float32')
+                        model = CNN_Interim(num_classes, latent_dim)
 
-                if 'phon' in mode:
-                    extractor = tf.keras.Sequential()
-                    for layer in model.layers[:-2]:
-                        extractor.add(layer)
-                    extractor.built = True
-                    train_features = extractor.predict(train_dataset)
-                    train_features_aug = extractor.predict(train_dataset_aug)
-                    test_features = extractor.predict(test_dataset)
-                elif mode=='vae':
-                    train_features, _ = model.encode(train_dataset)
-                    train_features_aug, _ = model.encode(train_dataset_aug)
-                    test_features, _ = model.encode(test_dataset)
-                elif mode=='siamese':
-                    train_features = model.cnn(train_dataset)
-                    train_features_aug = model.cnn(train_dataset_aug)
-                    test_features = model.cnn(test_dataset)
-                else:
-                    extractor = tf.keras.Sequential()
-                    for layer in model.cnn.layers[:-1]:
-                        extractor.add(layer)
-                    extractor.built = True
-                    train_features = extractor.predict(train_dataset)
-                    train_features_aug = extractor.predict(train_dataset_aug)
-                    test_features = extractor.predict(test_dataset)
+                        optimizer = tf.keras.optimizers.Adam(lr=lr)
+                        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=patience_early)
+                        lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', patience=patience_lr)
 
-                print(train_features.shape)
-                print(train_features_aug.shape)
-                print(test_features.shape)
-                print('')
+                        with tf.device(gpu_name):
 
-                if part<=9:
-                    np.save('../../data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(it), train_features)
-                    np.save('../../data/processed/' + mode + '/train_features_aug_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(it), train_features_aug)
-                    np.save('../../data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(it), test_features)
-                else:
-                    np.save('../../data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(it), train_features)
-                    np.save('../../data/processed/' + mode + '/train_features_aug_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(it), train_features_aug)
-                    np.save('../../data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(it), test_features) 
+                            model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
+                            history = model.fit(pretrain_dataset_train, pretrain_classes_train, batch_size=batch_size, epochs=epochs, validation_data=(pretrain_dataset_test,pretrain_classes_test), callbacks=[early_stopping,lr_scheduler], shuffle=True)  # , verbose=0
+                            validation_accuracy = max(history.history['val_accuracy'])
+                            print(validation_accuracy)
 
-            for part in list_test_participants_lvt:
+                model.save_weights('../../models/' + mode + '/pretrained_' + mode + '_' + str(latent_dim) + '_' + str(cv) + '_' + str(it) + '.h5')
 
-                if part<=9:
-                    train_dataset = np.load('../../data/interim/LVT/Dataset_Train_0' + str(part) + '.npy')
-                    train_dataset_aug = np.load('../../data/interim/LVT/Dataset_Train_Aug_0' + str(part) + '.npy')
-                    test_dataset = np.load('../../data/interim/LVT/Dataset_Test_0' + str(part) + '.npy')
-                else:
-                    train_dataset = np.load('../../data/interim/LVT/Dataset_Train_' + str(part) + '.npy')
-                    train_dataset_aug = np.load('../../data/interim/LVT/Dataset_Train_Aug_' + str(part) + '.npy')
-                    test_dataset = np.load('../../data/interim/LVT/Dataset_Test_' + str(part) + '.npy')
+                # Compute processed features
 
-                train_dataset = (train_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
-                train_dataset = np.log(train_dataset+1e-4)
-                train_dataset = (train_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+                print('Computing features...')
 
-                train_dataset_aug = (train_dataset_aug-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
-                train_dataset_aug = np.log(train_dataset_aug+1e-4)
-                train_dataset_aug = (train_dataset_aug-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+                for part in list_test_participants_avp:
 
-                test_dataset = (test_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
-                test_dataset = np.log(test_dataset+1e-4)
-                test_dataset = (test_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+                    if part<=9:
+                        train_dataset = np.load('../../data/interim/AVP/Dataset_Train_0' + str(part) + '.npy')
+                        train_dataset_aug = np.load('../../data/interim/AVP/Dataset_Train_Aug_0' + str(part) + '.npy')
+                        test_dataset = np.load('../../data/interim/AVP/Dataset_Test_0' + str(part) + '.npy')
+                    else:
+                        train_dataset = np.load('../../data/interim/AVP/Dataset_Train_' + str(part) + '.npy')
+                        train_dataset_aug = np.load('../../data/interim/AVP/Dataset_Train_Aug_' + str(part) + '.npy')
+                        test_dataset = np.load('../../data/interim/AVP/Dataset_Test_' + str(part) + '.npy')
 
-                train_dataset = np.expand_dims(train_dataset,axis=-1).astype('float32')
-                train_dataset_aug = np.expand_dims(train_dataset_aug,axis=-1).astype('float32')
-                test_dataset = np.expand_dims(test_dataset,axis=-1).astype('float32')
+                    train_dataset = (train_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
+                    train_dataset = np.log(train_dataset+1e-4)
+                    train_dataset = (train_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
 
-                if 'phon' in mode:
-                    extractor = tf.keras.Sequential()
-                    for layer in model.layers[:-2]:
-                        extractor.add(layer)
-                    extractor.built = True
-                    train_features = extractor.predict(train_dataset)
-                    train_features_aug = extractor.predict(train_dataset_aug)
-                    test_features = extractor.predict(test_dataset)
-                elif mode=='vae':
-                    train_features, _ = model.encode(train_dataset)
-                    train_features_aug, _ = model.encode(train_dataset_aug)
-                    test_features, _ = model.encode(test_dataset)
-                elif mode=='siamese':
-                    train_features = model.cnn(train_dataset)
-                    train_features_aug = model.cnn(train_dataset_aug)
-                    test_features = model.cnn(test_dataset)
-                else:
-                    extractor = tf.keras.Sequential()
-                    for layer in model.cnn.layers[:-1]:
-                        extractor.add(layer)
-                    extractor.built = True
-                    train_features = extractor.predict(train_dataset)
-                    train_features_aug = extractor.predict(train_dataset_aug)
-                    test_features = extractor.predict(test_dataset)
+                    train_dataset_aug = (train_dataset_aug-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
+                    train_dataset_aug = np.log(train_dataset_aug+1e-4)
+                    train_dataset_aug = (train_dataset_aug-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
 
-                print(train_features.shape)
-                print(train_features_aug.shape)
-                print(test_features.shape)
-                print('')
+                    test_dataset = (test_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
+                    test_dataset = np.log(test_dataset+1e-4)
+                    test_dataset = (test_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
 
-                if part<=9:
-                    np.save('../../data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(it), train_features)
-                    np.save('../../data/processed/' + mode + '/train_features_aug_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(it), train_features_aug)
-                    np.save('../../data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(it), test_features)
-                else:
-                    np.save('../../data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(it), train_features)
-                    np.save('../../data/processed/' + mode + '/train_features_aug_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(it), train_features_aug)
-                    np.save('../../data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(it), test_features)
+                    train_dataset = np.expand_dims(train_dataset,axis=-1).astype('float32')
+                    train_dataset_aug = np.expand_dims(train_dataset_aug,axis=-1).astype('float32')
+                    test_dataset = np.expand_dims(test_dataset,axis=-1).astype('float32')
 
-            tf.keras.backend.clear_session()
+                    if 'phon' in mode:
+                        extractor = tf.keras.Sequential()
+                        for layer in model.layers[:-2]:
+                            extractor.add(layer)
+                        extractor.built = True
+                        train_features = extractor.predict(train_dataset)
+                        train_features_aug = extractor.predict(train_dataset_aug)
+                        test_features = extractor.predict(test_dataset)
+                    elif mode=='vae':
+                        train_features, _ = model.encode(train_dataset)
+                        train_features_aug, _ = model.encode(train_dataset_aug)
+                        test_features, _ = model.encode(test_dataset)
+                    elif mode=='siamese':
+                        train_features = model.cnn(train_dataset)
+                        train_features_aug = model.cnn(train_dataset_aug)
+                        test_features = model.cnn(test_dataset)
+                    else:
+                        extractor = tf.keras.Sequential()
+                        for layer in model.cnn.layers[:-1]:
+                            extractor.add(layer)
+                        extractor.built = True
+                        train_features = extractor.predict(train_dataset)
+                        train_features_aug = extractor.predict(train_dataset_aug)
+                        test_features = extractor.predict(test_dataset)
+
+                    print(train_features.shape)
+                    print(train_features_aug.shape)
+                    print(test_features.shape)
+                    print('')
+
+                    if part<=9:
+                        np.save('../../data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
+                        np.save('../../data/processed/' + mode + '/train_features_aug_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
+                        np.save('../../data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), test_features)
+                    else:
+                        np.save('../../data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
+                        np.save('../../data/processed/' + mode + '/train_features_aug_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
+                        np.save('../../data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), test_features) 
+
+                for part in list_test_participants_lvt:
+
+                    if part<=9:
+                        train_dataset = np.load('../../data/interim/LVT/Dataset_Train_0' + str(part) + '.npy')
+                        train_dataset_aug = np.load('../../data/interim/LVT/Dataset_Train_Aug_0' + str(part) + '.npy')
+                        test_dataset = np.load('../../data/interim/LVT/Dataset_Test_0' + str(part) + '.npy')
+                    else:
+                        train_dataset = np.load('../../data/interim/LVT/Dataset_Train_' + str(part) + '.npy')
+                        train_dataset_aug = np.load('../../data/interim/LVT/Dataset_Train_Aug_' + str(part) + '.npy')
+                        test_dataset = np.load('../../data/interim/LVT/Dataset_Test_' + str(part) + '.npy')
+
+                    train_dataset = (train_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
+                    train_dataset = np.log(train_dataset+1e-4)
+                    train_dataset = (train_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+
+                    train_dataset_aug = (train_dataset_aug-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
+                    train_dataset_aug = np.log(train_dataset_aug+1e-4)
+                    train_dataset_aug = (train_dataset_aug-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+
+                    test_dataset = (test_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
+                    test_dataset = np.log(test_dataset+1e-4)
+                    test_dataset = (test_dataset-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
+
+                    train_dataset = np.expand_dims(train_dataset,axis=-1).astype('float32')
+                    train_dataset_aug = np.expand_dims(train_dataset_aug,axis=-1).astype('float32')
+                    test_dataset = np.expand_dims(test_dataset,axis=-1).astype('float32')
+
+                    if 'phon' in mode:
+                        extractor = tf.keras.Sequential()
+                        for layer in model.layers[:-2]:
+                            extractor.add(layer)
+                        extractor.built = True
+                        train_features = extractor.predict(train_dataset)
+                        train_features_aug = extractor.predict(train_dataset_aug)
+                        test_features = extractor.predict(test_dataset)
+                    elif mode=='vae':
+                        train_features, _ = model.encode(train_dataset)
+                        train_features_aug, _ = model.encode(train_dataset_aug)
+                        test_features, _ = model.encode(test_dataset)
+                    elif mode=='siamese':
+                        train_features = model.cnn(train_dataset)
+                        train_features_aug = model.cnn(train_dataset_aug)
+                        test_features = model.cnn(test_dataset)
+                    else:
+                        extractor = tf.keras.Sequential()
+                        for layer in model.cnn.layers[:-1]:
+                            extractor.add(layer)
+                        extractor.built = True
+                        train_features = extractor.predict(train_dataset)
+                        train_features_aug = extractor.predict(train_dataset_aug)
+                        test_features = extractor.predict(test_dataset)
+
+                    print(train_features.shape)
+                    print(train_features_aug.shape)
+                    print(test_features.shape)
+                    print('')
+
+                    if part<=9:
+                        np.save('../../data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
+                        np.save('../../data/processed/' + mode + '/train_features_aug_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
+                        np.save('../../data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), test_features)
+                    else:
+                        np.save('../../data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
+                        np.save('../../data/processed/' + mode + '/train_features_aug_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
+                        np.save('../../data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), test_features)
+
+                tf.keras.backend.clear_session()
