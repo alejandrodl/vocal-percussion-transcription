@@ -592,8 +592,8 @@ for m in range(len(modes)):
 
             for it in range(num_iterations):
 
-                patience_lr = 8
-                patience_early = 20
+                patience_lr = 7
+                patience_early = 14
 
                 validation_accuracy = -1
                 validation_loss = np.inf
@@ -608,7 +608,7 @@ for m in range(len(modes)):
 
                         model = VAE_Interim(latent_dim)
 
-                        optimizer = tf.keras.optimizers.Adam(lr=3*1e-3)
+                        optimizer = tf.keras.optimizers.Adam(lr=1e-3)
                         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early, restore_best_weights=False)
                         lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
 
@@ -625,7 +625,7 @@ for m in range(len(modes)):
 
                         set_seeds(it)
 
-                        model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=3*1e-3)
+                        model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=1e-3)
 
                         early_stopping = EarlyStopping_Phoneme(patience=patience_early, restore_best_weights=False)
                         lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_onset_accuracy', patience=patience_lr)
@@ -638,13 +638,22 @@ for m in range(len(modes)):
 
                 else:
 
+                    if mode=='classall' or mode=='classred':
+                        lr = 3*1e-4
+                    elif mode=='syllall' or mode=='syllred':
+                        lr = 5*1e-4
+                    else:
+                        lr = 5*1e-4
+                        patience_early = 20
+                        patience_lr = 10
+
                     while validation_accuracy < min_acc[m-1]:
 
                         set_seeds(it)
 
                         model = CNN_Interim(num_classes, latent_dim)
 
-                        optimizer = tf.keras.optimizers.Adam(lr=1e-3)
+                        optimizer = tf.keras.optimizers.Adam(lr=lr)
                         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=patience_early, restore_best_weights=False)
                         lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', patience=patience_lr)
 
