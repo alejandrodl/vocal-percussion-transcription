@@ -481,10 +481,10 @@ for m in range(len(modes)):
 
                 print('Calculating importances...')
 
-                forest = RandomForestClassifier(n_estimators=100,random_state=it,n_jobs=-1)
+                forest = RandomForestClassifier(n_estimators=200,random_state=it,n_jobs=-1)
 
                 forest.fit(dataset_train, classes_train)
-                results = permutation_importance(forest, dataset_test, classes_test, n_repeats=5, random_state=it)
+                results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=it)
 
                 indices_sorted = np.array(results.importances_mean).argsort()[::-1]
                 importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
@@ -525,10 +525,10 @@ for m in range(len(modes)):
 
                 print('Calculating onset importances...')
 
-                forest = RandomForestClassifier(n_estimators=100,random_state=0,n_jobs=-1)
+                forest = RandomForestClassifier(n_estimators=200,random_state=0,n_jobs=-1)
 
                 forest.fit(dataset_train, classes_train_onset)
-                results = permutation_importance(forest, dataset_test, classes_test_onset, n_repeats=5, random_state=0)
+                results = permutation_importance(forest, dataset_test, classes_test_onset, n_repeats=10, random_state=0)
 
                 indices_sorted = np.array(results.importances_mean).argsort()[::-1]
                 importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
@@ -540,10 +540,10 @@ for m in range(len(modes)):
 
                 print('Calculating nucleus importances...')
 
-                forest = RandomForestClassifier(n_estimators=100,random_state=it,n_jobs=-1)
+                forest = RandomForestClassifier(n_estimators=200,random_state=it,n_jobs=-1)
 
                 forest.fit(dataset_train, classes_train_nucleus)
-                results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=5, random_state=it)
+                results = permutation_importance(forest, dataset_test, classes_test_nucleus, n_repeats=10, random_state=it)
 
                 indices_sorted = np.array(results.importances_mean).argsort()[::-1]
                 importances_sorted = np.sort(np.array(results.importances_mean))[::-1]
@@ -582,10 +582,10 @@ for m in range(len(modes)):
 
                 print('Calculating importances...')
 
-                forest = RandomForestClassifier(n_estimators=100,random_state=it,n_jobs=-1)
+                forest = RandomForestClassifier(n_estimators=200,random_state=it,n_jobs=-1)
 
                 forest.fit(dataset_train, classes_train)
-                results = permutation_importance(forest, dataset_test, classes_test, n_repeats=5, random_state=it)
+                results = permutation_importance(forest, dataset_test, classes_test, n_repeats=10, random_state=it)
 
                 indices_sorted = np.array(results.importances_mean).argsort()[::-1]
                 importances_sorted = np.sort(np.array(results.importances_mean))[::-1]

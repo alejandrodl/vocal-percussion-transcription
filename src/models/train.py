@@ -12,7 +12,7 @@ from networks import *
 
 # Mode parameters
 
-modes = ['classall','classred','syllall','syllred','phonall','phonred']
+modes = ['classall','classred','syllall','syllred','phonall','phonred','sound']
 
 # Global parameters
 
@@ -52,7 +52,121 @@ for m in range(len(modes)):
 
         # Load and process classes
 
-        if 'syllall' in mode or 'phonall' in mode:
+        if mode=='sound':
+
+            num_samples = 32930
+            cutoff_test = int(((100-percentage_train)/100)*num_samples)
+
+            idx_start = cv*cutoff_test
+            idx_end = (cv+1)*cutoff_test
+            idxs_test = np.arange(idx_start,idx_end).tolist()
+
+            classes = np.zeros(1)
+            for n in range(28):
+                if n in list_test_participants_avp:
+                    continue
+                else:
+                    if n<=9:
+                        classes_str = np.load('data/interim/AVP/Classes_Train_Aug_0' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='kd':
+                                classes_pre[nc] = (n*4)
+                            elif classes_str[nc]=='sd':
+                                classes_pre[nc] = (n*4)+1
+                            elif classes_str[nc]=='hhc':
+                                classes_pre[nc] = (n*4)+2
+                            elif classes_str[nc]=='hho':
+                                classes_pre[nc] = (n*4)+3
+                        classes = np.concatenate((classes, classes_pre))
+                        classes_str = np.load('data/interim/AVP/Classes_Test_0' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='kd':
+                                classes_pre[nc] = (n*4)
+                            elif classes_str[nc]=='sd':
+                                classes_pre[nc] = (n*4)+1
+                            elif classes_str[nc]=='hhc':
+                                classes_pre[nc] = (n*4)+2
+                            elif classes_str[nc]=='hho':
+                                classes_pre[nc] = (n*4)+3
+                        classes = np.concatenate((classes, classes_pre))
+                    else:
+                        classes_str = np.load('data/interim/AVP/Classes_Train_Aug_' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='kd':
+                                classes_pre[nc] = (n*4)
+                            elif classes_str[nc]=='sd':
+                                classes_pre[nc] = (n*4)+1
+                            elif classes_str[nc]=='hhc':
+                                classes_pre[nc] = (n*4)+2
+                            elif classes_str[nc]=='hho':
+                                classes_pre[nc] = (n*4)+3
+                        classes = np.concatenate((classes, classes_pre))
+                        classes_str = np.load('data/interim/AVP/Classes_Test_' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='kd':
+                                classes_pre[nc] = (n*4)
+                            elif classes_str[nc]=='sd':
+                                classes_pre[nc] = (n*4)+1
+                            elif classes_str[nc]=='hhc':
+                                classes_pre[nc] = (n*4)+2
+                            elif classes_str[nc]=='hho':
+                                classes_pre[nc] = (n*4)+3
+                        classes = np.concatenate((classes, classes_pre))
+            for n in range(20):
+                if n in list_test_participants_lvt:
+                    continue
+                else:
+                    if n<=9:
+                        classes_str = np.load('data/interim/LVT/Classes_Train_Aug_0' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='Kick':
+                                classes_pre[nc] = (28*4) + (n*3)
+                            elif classes_str[nc]=='Snare':
+                                classes_pre[nc] = (28*4) + (n*3)+1
+                            elif classes_str[nc]=='HH':
+                                classes_pre[nc] = (28*4) + (n*3)+2
+                        classes = np.concatenate((classes, classes_pre))
+                        classes_str = np.load('data/interim/LVT/Classes_Test_0' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='Kick':
+                                classes_pre[nc] = (28*4) + (n*3)
+                            elif classes_str[nc]=='Snare':
+                                classes_pre[nc] = (28*4) + (n*3)+1
+                            elif classes_str[nc]=='HH':
+                                classes_pre[nc] = (28*4) + (n*3)+2
+                        classes = np.concatenate((classes, classes_pre))
+                    else:
+                        classes_str = np.load('data/interim/LVT/Classes_Train_Aug_' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='Kick':
+                                classes_pre[nc] = (28*4) + (n*3)
+                            elif classes_str[nc]=='Snare':
+                                classes_pre[nc] = (28*4) + (n*3)+1
+                            elif classes_str[nc]=='HH':
+                                classes_pre[nc] = (28*4) + (n*3)+2
+                        classes = np.concatenate((classes, classes_pre))
+                        classes_str = np.load('data/interim/LVT/Classes_Test_' + str(n) + '.npy')
+                        classes_pre = np.zeros(len(classes_str))
+                        for nc in range(len(classes_str)):
+                            if classes_str[nc]=='Kick':
+                                classes_pre[nc] = (28*4) + (n*3)
+                            elif classes_str[nc]=='Snare':
+                                classes_pre[nc] = (28*4) + (n*3)+1
+                            elif classes_str[nc]=='HH':
+                                classes_pre[nc] = (28*4) + (n*3)+2
+                        classes = np.concatenate((classes, classes_pre))
+            classes = classes[1:]
+
+            num_classes = int(np.max(classes)+1)
+
+        elif 'syllall' in mode or 'phonall' in mode:
 
             classes_onset = np.zeros(1)
             for n in range(28):
@@ -305,7 +419,7 @@ for m in range(len(modes)):
             np.random.seed(0)
             np.random.shuffle(pretrain_classes_test_nucleus)
 
-        elif 'class' in mode or 'siamese' in mode:
+        elif 'class' in mode or 'sound' in mode:
 
             pretrain_classes_train = np.delete(classes,idxs_test,axis=0).astype('float32')
             pretrain_classes_test = classes[idx_start:idx_end].astype('float32')
@@ -359,5 +473,3 @@ for m in range(len(modes)):
                 Spectrogram = (Spectrogram-norm_min_max[1][0])/(norm_min_max[1][1]-norm_min_max[1][0]+1e-16)
 
                 ##### You can do your thing below
-
-
