@@ -16,10 +16,12 @@ class EarlyStopping_Phoneme(tf.keras.callbacks.Callback):
     '''
     Function for early stopping for phoneme labels. It considers both the onset and nucleus losses.
     '''
-    def __init__(self, patience=0):
+    def __init__(self, patience=0, restore_best_weights=False):
         super(EarlyStopping_Phoneme, self).__init__()
 
         self.patience = patience
+        self.restore_best_weights = restore_best_weights
+
         self.best_weights = None
         
     def on_train_begin(self, logs=None):
@@ -33,8 +35,8 @@ class EarlyStopping_Phoneme(tf.keras.callbacks.Callback):
         onset_loss = logs.get('val_onset_accuracy')
         nucleus_loss = logs.get('val_nucleus_accuracy')
 
-        if np.greater(0.6*onset_loss+0.4*nucleus_loss, self.best_loss):
-            self.best_loss = 0.6*onset_loss+0.4*nucleus_loss
+        if np.greater(0.5*onset_loss+0.5*nucleus_loss, self.best_loss):
+            self.best_loss = 0.5*onset_loss+0.5*nucleus_loss
             self.wait = 0
             self.best_weights = self.model.get_weights()
         else:
@@ -42,8 +44,9 @@ class EarlyStopping_Phoneme(tf.keras.callbacks.Callback):
             if self.wait >= self.patience:
                 self.stopped_epoch = epoch
                 self.model.stop_training = True
-                print("Restoring model weights from the end of the best epoch.")
-                self.model.set_weights(self.best_weights)
+                if self.restore_best_weights:
+                    print("Restoring model weights from the end of the best epoch.")
+                    self.model.set_weights(self.best_weights)
                 
     def on_train_end(self, logs=None):
         if self.stopped_epoch > 0:
@@ -58,7 +61,7 @@ def set_seeds(seed):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -95,8 +98,8 @@ batch_size = 512
 
 # Class weighting
 
-onset_loss_weight = 0.6
-nucleus_loss_weight = 0.4
+onset_loss_weight = 0.5
+nucleus_loss_weight = 0.5
 class_weight = {'onset': onset_loss_weight, 'nucleus': nucleus_loss_weight}
 
 # Normalisation values
@@ -590,7 +593,7 @@ for m in range(len(modes)):
             for it in range(num_iterations):
 
                 patience_lr = 8
-                patience_early = 16
+                patience_early = 20
 
                 validation_accuracy = -1
                 validation_loss = np.inf
@@ -605,8 +608,8 @@ for m in range(len(modes)):
 
                         model = VAE_Interim(latent_dim)
 
-                        optimizer = tf.keras.optimizers.Adam(lr=1e-3)
-                        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early)
+                        optimizer = tf.keras.optimizers.Adam(lr=3*1e-3)
+                        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_early, restore_best_weights=False)
                         lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', patience=patience_lr)
 
                         with tf.device(gpu_name):
@@ -618,16 +621,13 @@ for m in range(len(modes)):
 
                 elif 'phon' in mode:
 
-                    patience_early = 20
-                    patience_lr = 10
-
                     while validation_accuracy < min_acc[m-1]:
 
                         set_seeds(it)
 
-                        model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=5*1e-4)
+                        model = CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr=3*1e-3)
 
-                        early_stopping = EarlyStopping_Phoneme(patience=patience_early)
+                        early_stopping = EarlyStopping_Phoneme(patience=patience_early, restore_best_weights=False)
                         lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_onset_accuracy', patience=patience_lr)
 
                         with tf.device(gpu_name):
@@ -638,23 +638,14 @@ for m in range(len(modes)):
 
                 else:
 
-                    if mode=='classall' or mode=='classred':
-                        lr = 2*1e-4
-                    elif mode=='syllall' or mode=='syllred':
-                        lr = 1e-3
-                    else:
-                        lr = 5*1e-3
-                        patience_early = 20
-                        patience_lr = 10
-
                     while validation_accuracy < min_acc[m-1]:
 
                         set_seeds(it)
 
                         model = CNN_Interim(num_classes, latent_dim)
 
-                        optimizer = tf.keras.optimizers.Adam(lr=lr)
-                        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=patience_early)
+                        optimizer = tf.keras.optimizers.Adam(lr=1e-3)
+                        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=patience_early, restore_best_weights=False)
                         lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', patience=patience_lr)
 
                         with tf.device(gpu_name):
