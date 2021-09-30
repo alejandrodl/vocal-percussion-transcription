@@ -132,20 +132,20 @@ def pitch_shift(data, sampling_rate, pitch_semitones):
     return pyrb.pitch_shift(data, sampling_rate, pitch_semitones)
 
 def time_stretch(data, stretch_factor):
-    return pyrb.time_stretch(data, 44100, stretch_factor)
+    return pyrb.time_stretch(data, 11000, stretch_factor)
 
 
 
-frame_sizes = [1024]
-num_specs = [64]
+frame_sizes = [256]
+num_specs = [128]
 num_frames = 48
 
-hop_size = 512
+hop_size = 128
 delta_bool = False
 
 
 
-'''# Create AVP Test Dataset
+# Create AVP Test Dataset
 
 print('AVP Test')
 
@@ -179,7 +179,7 @@ for i in range(len(list_wav)):
 
     Onset_Phonemes_Labels, Nucleus_Phonemes_Labels, Onset_Phonemes_Reduced_Labels, Nucleus_Phonemes_Reduced_Labels = Create_Phoneme_Labels(Onset_Phonemes, Nucleus_Phonemes)
 
-    audio, fs = librosa.load(list_wav[i], sr=44100)
+    audio, fs = librosa.load(list_wav[i], sr=11000)
     audio = audio/np.max(abs(audio))
 
     onsets_samples = onsets*fs
@@ -192,7 +192,8 @@ for i in range(len(list_wav)):
             frame_size = frame_sizes[w]
             num_spec = num_specs[j]
             
-            spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+            #spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+            spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
             if delta_bool:
                 delta = librosa.feature.delta(spec)
@@ -281,7 +282,7 @@ for i in range(len(list_wav)):
     onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
     Classes = np.loadtxt(list_csv[i], delimiter=',', usecols=1, dtype=np.unicode_)
     
-    audio, fs = librosa.load(list_wav[i], sr=44100)
+    audio, fs = librosa.load(list_wav[i], sr=11000)
     audio_ref = audio/np.max(abs(audio))
 
     onsets_samples = onsets*fs
@@ -324,7 +325,8 @@ for i in range(len(list_wav)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
             
-                spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                #spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 if delta_bool:
                     delta = librosa.feature.delta(spec)
@@ -401,7 +403,7 @@ for i in range(len(list_wav)):
 
 print('AVP Train')
 
-fs = 44100
+fs = 11000
 
 path_audio = 'data/external/AVP_Dataset/Personal'
 
@@ -451,7 +453,7 @@ for j in range(len(num_specs)):
                 onsets = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=0)
                 Classes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=1, dtype=np.unicode_)
 
-                audio, fs = librosa.load(list_wav_all[4*part+i], sr=44100)
+                audio, fs = librosa.load(list_wav_all[4*part+i], sr=11000)
                 audio_ref = audio/np.max(abs(audio))
 
                 onsets_samples = onsets*fs
@@ -469,8 +471,9 @@ for j in range(len(num_specs)):
                         audio = audio_ref.copy()
                         onsets = onsets_ref.copy()
 
-                    spec = librosa.feature.melspectrogram(np.concatenate((audio,np.zeros(4096))), sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
-                    
+                    #spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                    spec = np.abs(librosa.stft(np.concatenate((audio,np.zeros(1024))), n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
+
                     if delta_bool:
                         delta = librosa.feature.delta(spec)
                         Dataset_Spec = np.concatenate((spec, delta), axis=1)
@@ -555,7 +558,7 @@ for j in range(len(num_specs)):
 
 print('AVP Train Aug')
 
-fs = 44100
+fs = 11000
 
 path_audio = 'data/external/AVP_Dataset/Personal'
 
@@ -605,7 +608,7 @@ for j in range(len(num_specs)):
                 onsets = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=0)
                 Classes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=1, dtype=np.unicode_)
 
-                audio, fs = librosa.load(list_wav_all[4*part+i], sr=44100)
+                audio, fs = librosa.load(list_wav_all[4*part+i], sr=11000)
                 audio_ref = audio/np.max(abs(audio))
 
                 onsets_samples = onsets*fs
@@ -633,9 +636,10 @@ for j in range(len(num_specs)):
                         audio = pitch_shift(audio, fs, pt)
                         onsets = onsets_ref/st
                         onsets = onsets.astype(int)
+                        
+                    #spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                    spec = np.abs(librosa.stft(np.concatenate((audio,np.zeros(1024))), n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
-                    spec = librosa.feature.melspectrogram(np.concatenate((audio,np.zeros(4096))), sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
-                    
                     if delta_bool:
                         delta = librosa.feature.delta(spec)
                         Dataset_Spec = np.concatenate((spec, delta), axis=1)
@@ -707,7 +711,7 @@ for j in range(len(num_specs)):
                 np.save('data/interim/AVP/Syll_Onset_Train_Aug_' + str(part), Onset_Phonemes_Labels_All)
                 np.save('data/interim/AVP/Syll_Nucleus_Train_Aug_' + str(part), Nucleus_Phonemes_Labels_All)
                 np.save('data/interim/AVP/Syll_Onset_Reduced_Train_Aug_' + str(part), Onset_Phonemes_Reduced_Labels_All)
-                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)'''
+                np.save('data/interim/AVP/Syll_Nucleus_Reduced_Train_Aug_' + str(part), Nucleus_Phonemes_Reduced_Labels_All)
 
 
 
@@ -745,7 +749,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=44100)
+            audio, fs = librosa.load(list_wav[i], sr=11000)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -769,7 +773,8 @@ for j in range(len(num_specs)):
                 audio = audio_ref
                 onsets = onsets_ref
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -865,7 +870,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=44100)
+            audio, fs = librosa.load(list_wav[i], sr=11000)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -901,7 +906,8 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -996,7 +1002,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=44100)
+            audio, fs = librosa.load(list_wav[i], sr=11000)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -1020,7 +1026,8 @@ for j in range(len(num_specs)):
                 audio = audio_ref
                 onsets = onsets_ref
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -1113,7 +1120,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=44100)
+            audio, fs = librosa.load(list_wav[i], sr=11000)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -1132,7 +1139,8 @@ for j in range(len(num_specs)):
                 Onset_Phonemes = np.loadtxt(list_csv[i], delimiter=',', usecols=2, dtype=np.unicode_)
                 Nucleus_Phonemes = np.loadtxt(list_csv[i], delimiter=',', usecols=3, dtype=np.unicode_)
 
-                Onset_Phonemes_Labels, Nucleus_Phonemes_Labels, Onset_Phonemes_Reduced_Labels, Nucleus_Phonemes_Reduced_Labels = Create_Phoneme_Labels(Onset_Phonemes, Nucleus_Phonemes)
+                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 kn = np.random.randint(0,2)
                 pt = np.random.uniform(low=-1.5, high=1.5, size=None)
@@ -1149,7 +1157,8 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                Dataset_Spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=11000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                Dataset_Spec = librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect').T
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
                 location = np.floor(onsets/hop_size)
@@ -1188,7 +1197,7 @@ for j in range(len(num_specs)):
             Onset_Phonemes_Labels_All = Onset_Phonemes_Labels_All[1:]
             Nucleus_Phonemes_Labels_All = Nucleus_Phonemes_Labels_All[1:]
             Onset_Phonemes_Reduced_Labels_All = Onset_Phonemes_Reduced_Labels_All[1:]
-            Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:] 
+            Nucleus_Phonemes_Reduced_Labels_All = Nucleus_Phonemes_Reduced_Labels_All[1:]
 
             if i<=9:
                 np.save('data/interim/LVT/Dataset_Test_Aug_0' + str(i), Spec_Matrix_All)
