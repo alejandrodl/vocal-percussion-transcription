@@ -28,33 +28,34 @@ class VAE_Interim(tf.keras.Model):
 
     def __init__(self, latent_dim):
         super(VAE_Interim, self).__init__()
-        self.latent_dim = 32
+        self.latent_dim = latent_dim
         self.encoder = tf.keras.Sequential(
             [
                 tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
                 tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
                 tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
                 tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
-                tf.keras.layers.BatchNormalization(),
+                #tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid'),
                 tf.keras.layers.Flatten(),
                 # No activation
                 tf.keras.layers.Dense(self.latent_dim+self.latent_dim),
+                tf.keras.layers.Dropout(0.3)
             ]
         )
 
