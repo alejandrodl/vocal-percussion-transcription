@@ -31,7 +31,7 @@ class VAE_Interim(tf.keras.Model):
         self.latent_dim = 32
         self.encoder = tf.keras.Sequential(
             [
-                tf.keras.layers.InputLayer(input_shape=(64, 48, 1)),
+                tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
@@ -61,8 +61,8 @@ class VAE_Interim(tf.keras.Model):
         self.decoder = tf.keras.Sequential(
             [
                 tf.keras.layers.InputLayer(input_shape=(self.latent_dim,)),
-                tf.keras.layers.Dense(units=4*3*64, activation=tf.nn.relu),
-                tf.keras.layers.Reshape(target_shape=(4, 3, 64)),
+                tf.keras.layers.Dense(units=4*4*64, activation=tf.nn.relu),
+                tf.keras.layers.Reshape(target_shape=(4, 4, 64)),
                 tf.keras.layers.Conv2DTranspose(
                     filters=32, kernel_size=(3,3), strides=(2,2), padding='same', activation='relu'),
                 tf.keras.layers.Conv2DTranspose(
@@ -109,7 +109,7 @@ class CNN_Interim(tf.keras.Model):
         super(CNN_Interim, self).__init__()
         self.cnn = tf.keras.Sequential(
             [
-                tf.keras.layers.InputLayer(input_shape=(64, 48, 1)),
+                tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
@@ -149,30 +149,31 @@ def CNN_Interim_Phonemes(num_onset, num_nucleus, latent_dim, lr) -> tf.keras.Mod
     :return:
     """
 
-    x_input = tf.keras.Input(shape=(64, 48, 1), dtype='float32')
+    x_input = tf.keras.Input(shape=(64, 64, 1), dtype='float32')
 
-    x = tf.keras.layers.InputLayer(input_shape=(64, 48, 1))(x_input)
+    x = tf.keras.layers.InputLayer(input_shape=(64, 64, 1))(x_input)
     x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
     x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(filters=16, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
     x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
     x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    #x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.MaxPool2D(pool_size=(2, 2), padding='valid')(x)
     x = tf.keras.layers.Flatten()(x)
+    x = layers.Dropout(0.3)(x)
     x = tf.keras.layers.Dense(latent_dim)(x)
     #x = tf.keras.layers.BatchNormalization()(x)
     #x = tf.keras.layers.Activation(activation='relu')(x)
@@ -196,7 +197,7 @@ class CNN_Interim_Siamese(tf.keras.Model):
         super(CNN_Interim_Siamese, self).__init__()
         self.cnn = tf.keras.Sequential(
             [
-                tf.keras.layers.InputLayer(input_shape=(64, 48, 1)),
+                tf.keras.layers.InputLayer(input_shape=(64, 64, 1)),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Conv2D(filters=8, kernel_size=(3,3), strides=(1,1), activation='relu', padding='same'),
