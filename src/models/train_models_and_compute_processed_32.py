@@ -81,8 +81,7 @@ percentage_train = 80
 num_crossval = 5
 num_iterations = 5
 
-#modes = ['vae','classall','classred','syllall','syllred','phonall','phonred','sound']
-modes = ['vae','syllall','syllred','phonall','phonred','sound']
+modes = ['vae','classall','classred','syllall','syllred','phonall','phonred','sound']
 
 # Data parameters
 
