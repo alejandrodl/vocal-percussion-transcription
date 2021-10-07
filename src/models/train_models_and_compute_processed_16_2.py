@@ -62,7 +62,7 @@ def set_seeds(seed):
 
 
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 os.nice(0)
 gpu_name = '/GPU:0'
 
@@ -82,7 +82,7 @@ num_crossval = 5
 num_iterations = 5
 
 #modes = ['vae','classall','classred','syllall','syllred','phonall','phonred','sound']
-modes = ['syllall','syllred','phonall']
+modes = ['classall','classred','phonred','sound']
 
 # Data parameters
 
