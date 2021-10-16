@@ -132,3 +132,6 @@ dmypy.json
 data
 results
 _discarded
+.vscode
+.DS_Store
+.Rapp.history
