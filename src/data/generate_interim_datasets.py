@@ -24,123 +24,16 @@ import random
 from random import randrange
 import shutil
 import copy
-#import rubberband
-import pyrubberband as pyrb
 
-
-def Create_Phoneme_Labels(Onset_Phonemes, Nucleus_Phonemes):
-
-    Onset_Phonemes_Labels = np.zeros(Onset_Phonemes.shape)
-    for n in range(len(Onset_Phonemes)):
-        if 'ts' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 0
-        elif 'tʃ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 1
-        elif 'tɕ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 2
-        elif 'kg' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 3
-        elif 'tʒ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 4
-        elif 'ʡʢ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 5
-        elif 'dʒ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 6
-        elif 'kʃ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 7
-        elif Onset_Phonemes[n]=='t':
-            Onset_Phonemes_Labels[n] = 8
-        elif Onset_Phonemes[n]=='p':
-            Onset_Phonemes_Labels[n] = 9
-        elif Onset_Phonemes[n]=='k':
-            Onset_Phonemes_Labels[n] = 10
-        elif Onset_Phonemes[n]=='s':
-            Onset_Phonemes_Labels[n] = 11
-        elif Onset_Phonemes[n]=='!':
-            Onset_Phonemes_Labels[n] = 12
-            
-    Nucleus_Phonemes_Labels = np.zeros(Nucleus_Phonemes.shape)
-    for n in range(len(Nucleus_Phonemes)):
-        if 'a' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 0
-        elif 'e' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 1
-        elif 'i' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 2
-        elif 'o' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 3
-        elif 'u' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 4
-        elif 'æ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 5
-        elif 'œ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 6
-        elif 'ə' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 7
-        elif 'ʊ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 8
-        elif 'ɯ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 9
-        elif 'y' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 10
-        elif 'ɪ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 11
-        elif 'ɐ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 12
-        elif 'ʌ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 13
-        elif 'h' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 14
-        else:
-            Nucleus_Phonemes_Labels[n] = 15
-               
-    Onset_Phonemes_Reduced_Labels = np.zeros(Onset_Phonemes.shape)
-    for n in range(len(Onset_Phonemes)):
-        if 'ts' in Onset_Phonemes[n] or Onset_Phonemes[n]=='s':
-            Onset_Phonemes_Reduced_Labels[n] = 0
-        elif 'tʃ' in Onset_Phonemes[n] or 'tɕ' in Onset_Phonemes[n] or 'dʒ' in Onset_Phonemes[n] or 'tʒ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Reduced_Labels[n] = 1
-        elif 'kg' in Onset_Phonemes[n] or Onset_Phonemes[n]=='k' or 'kʃ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Reduced_Labels[n] = 2
-        elif 'ʡʢ' in Onset_Phonemes[n] or Onset_Phonemes[n]=='p':
-            Onset_Phonemes_Reduced_Labels[n] = 3
-        elif Onset_Phonemes[n]=='t' or Onset_Phonemes[n]=='!':
-            Onset_Phonemes_Reduced_Labels[n] = 4
-            
-    Nucleus_Phonemes_Reduced_Labels = np.zeros(Nucleus_Phonemes.shape)
-    for n in range(len(Nucleus_Phonemes)):
-        if 'a' in Nucleus_Phonemes[n] or 'æ' in Nucleus_Phonemes[n] or 'ɐ' in Nucleus_Phonemes[n] or 'ʌ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 0
-        elif 'e' in Nucleus_Phonemes[n] or 'œ' in Nucleus_Phonemes[n] or 'ə' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 1
-        elif 'i' in Nucleus_Phonemes[n] or 'y' in Nucleus_Phonemes[n] or 'ɪ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 2
-        elif 'o' in Nucleus_Phonemes[n] or 'ʊ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 3
-        elif 'u' in Nucleus_Phonemes[n] or 'ɯ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 4
-        elif 'h' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 5
-        else:
-            Nucleus_Phonemes_Reduced_Labels[n] = 6
-            
-    return Onset_Phonemes_Labels, Nucleus_Phonemes_Labels, Onset_Phonemes_Reduced_Labels, Nucleus_Phonemes_Reduced_Labels
-
-
-    
-def pitch_shift(data, sampling_rate, pitch_semitones):
-    return pyrb.pitch_shift(data, sampling_rate, pitch_semitones)
-
-def time_stretch(data, stretch_factor):
-    return pyrb.time_stretch(data, 8000, stretch_factor)
+from utils import Create_Phoneme_Labels, pitch_shift, time_stretch
 
 
 
-frame_sizes = [128]
+frame_sizes = [1024]
 num_specs = [64]
-num_frames = 64
+num_frames = 48
 
-hop_size = 64
+hop_size = 512
 delta_bool = False
 
 
@@ -179,7 +72,7 @@ for i in range(len(list_wav)):
 
     Onset_Phonemes_Labels, Nucleus_Phonemes_Labels, Onset_Phonemes_Reduced_Labels, Nucleus_Phonemes_Reduced_Labels = Create_Phoneme_Labels(Onset_Phonemes, Nucleus_Phonemes)
 
-    audio, fs = librosa.load(list_wav[i], sr=8000)
+    audio, fs = librosa.load(list_wav[i], sr=44100)
     audio = audio/np.max(abs(audio))
 
     onsets_samples = onsets*fs
@@ -192,7 +85,7 @@ for i in range(len(list_wav)):
             frame_size = frame_sizes[w]
             num_spec = num_specs[j]
             
-            #spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+            #spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
             spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
             if delta_bool:
@@ -253,9 +146,6 @@ for i in range(len(list_wav)):
 
 print('AVP Test Aug')
 
-pitch = [-1,1]
-times = [0.85,1.15]
-
 path_audio = 'data/external/AVP_Dataset/Personal'
 
 list_wav = []
@@ -282,7 +172,7 @@ for i in range(len(list_wav)):
     onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
     Classes = np.loadtxt(list_csv[i], delimiter=',', usecols=1, dtype=np.unicode_)
     
-    audio, fs = librosa.load(list_wav[i], sr=8000)
+    audio, fs = librosa.load(list_wav[i], sr=44100)
     audio_ref = audio/np.max(abs(audio))
 
     onsets_samples = onsets*fs
@@ -325,7 +215,7 @@ for i in range(len(list_wav)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
             
-                #spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                #spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                 spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 if delta_bool:
@@ -403,7 +293,7 @@ for i in range(len(list_wav)):
 
 print('AVP Train')
 
-fs = 8000
+fs = 44100
 
 path_audio = 'data/external/AVP_Dataset/Personal'
 
@@ -453,7 +343,7 @@ for j in range(len(num_specs)):
                 onsets = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=0)
                 Classes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=1, dtype=np.unicode_)
 
-                audio, fs = librosa.load(list_wav_all[4*part+i], sr=8000)
+                audio, fs = librosa.load(list_wav_all[4*part+i], sr=44100)
                 audio_ref = audio/np.max(abs(audio))
 
                 onsets_samples = onsets*fs
@@ -471,7 +361,7 @@ for j in range(len(num_specs)):
                         audio = audio_ref.copy()
                         onsets = onsets_ref.copy()
 
-                    #spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                    #spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                     spec = np.abs(librosa.stft(np.concatenate((audio,np.zeros(1024))), n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                     if delta_bool:
@@ -558,7 +448,7 @@ for j in range(len(num_specs)):
 
 print('AVP Train Aug')
 
-fs = 8000
+fs = 44100
 
 path_audio = 'data/external/AVP_Dataset/Personal'
 
@@ -608,7 +498,7 @@ for j in range(len(num_specs)):
                 onsets = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=0)
                 Classes = np.loadtxt(list_csv_all[4*part+i], delimiter=',', usecols=1, dtype=np.unicode_)
 
-                audio, fs = librosa.load(list_wav_all[4*part+i], sr=8000)
+                audio, fs = librosa.load(list_wav_all[4*part+i], sr=44100)
                 audio_ref = audio/np.max(abs(audio))
 
                 onsets_samples = onsets*fs
@@ -637,7 +527,7 @@ for j in range(len(num_specs)):
                         onsets = onsets_ref/st
                         onsets = onsets.astype(int)
                         
-                    #spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
+                    #spec = librosa.feature.melspectrogram(audio, sr=44100, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                     spec = np.abs(librosa.stft(np.concatenate((audio,np.zeros(1024))), n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                     if delta_bool:
@@ -749,7 +639,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=8000)
+            audio, fs = librosa.load(list_wav[i], sr=44100)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -773,7 +663,6 @@ for j in range(len(num_specs)):
                 audio = audio_ref
                 onsets = onsets_ref
 
-                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                 Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
@@ -870,7 +759,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=8000)
+            audio, fs = librosa.load(list_wav[i], sr=44100)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -906,7 +795,6 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                 Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
@@ -1002,7 +890,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=8000)
+            audio, fs = librosa.load(list_wav[i], sr=44100)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -1026,7 +914,6 @@ for j in range(len(num_specs)):
                 audio = audio_ref
                 onsets = onsets_ref
 
-                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                 Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
@@ -1120,7 +1007,7 @@ for j in range(len(num_specs)):
             
             onsets = np.loadtxt(list_csv[i], delimiter=',', usecols=0)
 
-            audio, fs = librosa.load(list_wav[i], sr=8000)
+            audio, fs = librosa.load(list_wav[i], sr=44100)
             audio_ref = audio/np.max(abs(audio))
 
             onsets_samples = onsets*fs
@@ -1156,7 +1043,6 @@ for j in range(len(num_specs)):
                     onsets = onsets_ref/st
                     onsets = onsets.astype(int)
 
-                #Dataset_Spec = librosa.feature.melspectrogram(audio, sr=8000, n_fft=frame_size, hop_length=hop_size, n_mels=num_spec, power=1.0).T
                 Dataset_Spec = np.abs(librosa.stft(audio, n_fft=frame_size, hop_length=hop_size, win_length=None, window='hann', center=True, dtype=None, pad_mode='reflect')[:frame_size//2].T)
 
                 Onsets = np.zeros(Dataset_Spec.shape[0])
