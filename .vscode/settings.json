@@ -1,3 +1,4 @@
 {
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "python.pythonPath": "/Users/alejandrodelgadoluezas/anaconda3/envs/mip/bin/python"
 }
