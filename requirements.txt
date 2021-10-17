@@ -1,0 +1,17 @@
+librosa==0.8.0
+matplotlib==3.2.2
+numpy==1.19.2
+tensorflow==2.1.0
+PySoundFile==0.9.0.post1
+pyrubberband==0.3.0
+scipy==1.5.4
+aubio==0.4.9
+xgboost.egg==info
+tfp_nightly==0.14.0.dev20210630
+tensorflow_probability==0.14.1
+essentia==2.1b6.dev374
+ipython==7.28.0
+scikit_learn==1.0
+soundfile==0.10.3.post1
+tensorflow_addons==0.9.1
+xgboost==1.5.0

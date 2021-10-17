@@ -36,8 +36,6 @@ num_frames = 48
 hop_size = 512
 delta_bool = False
 
-
-
 # Create AVP Test Dataset
 
 print('AVP Test')
