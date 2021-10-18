@@ -113,7 +113,7 @@ Pretrained Models
 
 Weights relative to the final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
 
-We recommend using the `syllable_level_cnn.h5` for feature extraction, as it yields the best performance in the table [above](#Results) and does not require training like the E2E CNN.
+We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results) and does not require training like the E2E CNN.
 
 TODO List
 ---------
