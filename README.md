@@ -54,13 +54,13 @@ Due to the long training time required (32 hours on a typical GPU approx.), we a
 To evaluate the performance of input embedding vectors, run:
 
 ```sh
-python offline_evaluate_processed_knn.py
+python eval_knn.py
 ```
 
 for KNN classification or
 
 ```sh
-python offline_evaluate_processed_alternative_classifiers.py
+python eval_alt.py
 ```
 
 for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
