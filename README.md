@@ -25,7 +25,7 @@ pip install -r requirements.txt
 Processed Files
 ---------------
 
-Training deep learning models and feature selection algorithms is time-consuming, taking approximately 36 hours (GPU) and 48 hours (CPU) respectively. To avoid this, we provide the final learnt embeddings and feature importances arrays that are used in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump to the evaluation section [below](#Evaluation).
+Training deep learning models and feature selection algorithms is time-consuming, taking approximately 36 hours (GPU) and 48 hours (CPU) respectively. To avoid this, we provide the final learnt embeddings and feature importances arrays that are used in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump directly to the evaluation section [below](#Evaluation).
 
 Data
 ----
@@ -74,7 +74,7 @@ python train_selection.py
 Evaluation
 ----------
 
-To evaluate the performance of learnt embeddings and selected features stored in `data/processed`, run:
+To evaluate the performance of learnt embeddings and selected features, which should be stored in `data/processed` by now, run:
 
 ```sh
 python eval_knn.py
