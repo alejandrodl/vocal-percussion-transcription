@@ -261,7 +261,7 @@ def load_classes_syll_phon(mode, list_test_participants_avp, list_test_participa
                 else:
                     classes[n] = combinations.index(combination)
 
-            num_classes = np.max(classes)+1
+            np.max(classes)+1
 
             return classes
 
@@ -325,8 +325,8 @@ def load_classes_syll_phon(mode, list_test_participants_avp, list_test_participa
                     classes_nucleus = np.concatenate((classes_nucleus, np.load('data/interim/LVT/Syll_Nucleus_Reduced_Test_Aug_' + str(n) + '.npy')))
         classes_nucleus = classes_nucleus[1:]
 
-        num_onset = np.max(classes_onset)+1
-        num_nucleus = np.max(classes_nucleus)+1
+        np.max(classes_onset)+1
+        np.max(classes_nucleus)+1
 
         if 'syll' in mode:
 
@@ -340,7 +340,7 @@ def load_classes_syll_phon(mode, list_test_participants_avp, list_test_participa
                 else:
                     classes[n] = combinations.index(combination)
 
-            num_classes = np.max(classes)+1
+            np.max(classes)+1
 
             return classes
 
@@ -390,7 +390,7 @@ def load_classes_instrument(mode, list_test_participants_avp, list_test_particip
             elif classes_str[n]=='hho':
                 classes[n] = 3
 
-        num_classes = np.max(classes)+1
+        np.max(classes)+1
 
     elif mode=='classred':
 

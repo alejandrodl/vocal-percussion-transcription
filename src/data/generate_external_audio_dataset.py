@@ -7,18 +7,9 @@ import numpy as np
 import scipy as sp
 import scipy.interpolate
 import scipy.io.wavfile
-import sys
-import logging
 import librosa
 from librosa.util import frame
-import glob
 import os
-import time
-import pdb
-import random
-from random import randrange
-import shutil
-import copy
 #import rubberband
 import pyrubberband as pyrb
 
