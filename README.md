@@ -31,9 +31,9 @@ Training deep learning models and feature selection algorithms is time-consuming
 Data
 ----
 
-Before running any commands, please [download](link_to_be_created_soon) the AVP-LVT dataset and, once downloaded, place its contents in the `data/external` directory.
+Before running any commands, [download](link_to_be_created_soon) the AVP-LVT dataset. Once downloaded, place its contents in the `data/external` directory.
 
-The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms. Also, several engineered (hand-crafted) feature vectors need to be extracted for the baseline methods.
+The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms. Also, several engineered (hand-crafted) feature vectors need to be extracted for the baseline methods using the same frame-wise parameters as for the spectrogram.
 
 To build spectrogram representations, which will be saved in the `data/interim` directory, run this command:
 
