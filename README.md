@@ -106,7 +106,7 @@ Our models achieve the following performances on the AVP-LVT dataset with a KNN 
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
 | E2E CNN             |        .896 ± .008       |      .877 ± .010     |
 
-<ins>Important Note</ins>: the last model, E2E CNN, is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription. The main drawback of this method is its long training time, which lasts for around 4 minutes on a typical CPU. For more details, see (link).
+<ins>Important Note</ins>: the E2E CNN model is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription. The main drawbacks of this method is its long training time, which lasts for around 4 minutes on a typical CPU, and its tendency to data overfitting. For more details, see (link).
 
 Pretrained Models
 -----------------
