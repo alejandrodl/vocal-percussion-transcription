@@ -1,78 +1,96 @@
 Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription
 ============================================================================
 
-This is the code repository for the ICASSP 2022 paper 
+This is the code repository for the ICASSP 2022 paper (under review) 
 *Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription*
 by Alejandro Delgado, Emir Demirel, Vinod Subramanian, Charalampos Saitis, and Mark Sandler.
 
 Contents
 --------
 
-- `src` – the main codebase with scripts for processing data, models, and results (usage details [below](#Usage))
-- `data` – datasets used throughout the study.
-- `models` – folder that hosts trained models.
+- `src` – the main codebase with scripts for processing data, models, and results (details in sections below).
+- `data` – datasets and processed data used throughout the study.
+- `models` – folder that hosts already trained models.
 - `results` – folder that hosts information relative to final accuracy results.
 
 Setup
 -----
 
-To install requirements:
+To install requirements and run setup:
 
 ```sh
 pip install -r requirements.txt
+pip install ./src
 ```
 
-Usage
------
+Processed Files
+---------------
+
+Training deep learning models and feature selection algorithms is time-consuming, taking approximately 36 hours (GPU) and 48 hours (CPU) respectively. To avoid this, we provide the final learnt embeddings and feature importances arrays that are used in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump directly to the evaluation section [below](#Evaluation).
+
+Data
+----
 
 Before running any commands, please [download](link_to_be_created_soon) the AVP-LVT dataset and, once downloaded, place its contents in the `data/external` directory.
 
-### Representations
+The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms. Also, several engineered (hand-crafted) feature vectors need to be extracted for the baseline methods.
 
-The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms.
-
-To build these spectrogram representations, which will be saved in the `data/interim` directory, run this command:
+To build spectrogram representations, which will be saved in the `data/interim` directory, run this command:
 
 ```sh
 python generate_interim_datasets.py
 ```
 
-### Training
+To extract engineered features, also saved in the `data/interim` directory, run this command:
 
-To train the models and save embeddings predicted from evaluation data, run this command:
+```sh
+python extract_engineered_features_mfcc_env.py
+```
+
+to extract "MFCCs + Envelope" features or
+
+```sh
+python extract_engineered_features_all.py
+```
+
+to extract 258-dimensional feature vectors to feed feature selection algorithms.
+
+Training
+--------
+
+To train deep learning models and save embeddings predicted from evaluation data, run this command:
 
 ```sh
 python train_deep.py
 ```
 
-### Embeddings
-
-Due to the long training time required (32 hours on a typical GPU approx.), we also provide the final learnt embedding vectors that are used as input features in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump to evaluation.
-
-### Evaluation
-
-To evaluate the performance of input embedding vectors, run:
+To train feature selection methods and save feature importances, run this command:
 
 ```sh
-python offline_evaluate_processed_knn.py
+python train_selection.py
+```
+
+Evaluation
+----------
+
+To evaluate the performance of learnt embeddings and selected features, which should be stored in `data/processed` by now, run:
+
+```sh
+python eval_knn.py
 ```
 
 for KNN classification or
 
 ```sh
-python offline_evaluate_processed_alternative_classifiers.py
+python eval_alt.py
 ```
 
 for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
 
-### Models
-
-Final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
-
 Results
 -------
 
-Our models achieve the following performances on the AVP-LVT dataset:
+Our models achieve the following performances on the AVP-LVT dataset with a KNN classifier:
 
 | Method              | Participant-wise Accuracy| Boxeme-wise Accuracy |
 | --------------------|------------------------- | -------------------- |
@@ -86,6 +104,24 @@ Our models achieve the following performances on the AVP-LVT dataset:
 | Phoneme Original    |        .876 ± .014       |      .840 ± .018     |
 | Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
+| E2E CNN             |        .896 ± .008       |      .877 ± .010     |
+
+<ins>Important Note</ins>: the E2E CNN model is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription. The main drawbacks of this method is its long training time, which lasts for around 4 minutes on a typical CPU, and its tendency to data overfitting. For more details, see (link).
+
+Pretrained Models
+-----------------
+
+Weights relative to the final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
+
+We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results) and does not require training like the E2E CNN.
+
+TODO List
+---------
+
+- [x] Add full table with results
+- Add data and paper links
+- Finish tidying up code
+- Write routines for personal use
 
 Acknowledgments
 ---------------
