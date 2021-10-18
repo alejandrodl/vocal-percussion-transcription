@@ -8,9 +8,9 @@ by Alejandro Delgado, Emir Demirel, Vinod Subramanian, Charalampos Saitis, and M
 Contents
 --------
 
-- `src` – the main codebase with scripts for processing data, models, and results (usage details [below](#Usage))
-- `data` – datasets used throughout the study (download details [below](#Usage))
-- `models` – folder that hosts trained models (download details [below](#Pretrained Models))
+- `src` – the main codebase with scripts for processing data, models, and results (details in sections below).
+- `data` – datasets and processed data used throughout the study.
+- `models` – folder that hosts already trained models.
 - `results` – folder that hosts information relative to final accuracy results.
 
 Setup
@@ -45,13 +45,13 @@ python generate_interim_datasets.py
 To extract engineered features, also saved in the `data/interim` directory, run this command:
 
 ```sh
-python generate_interim_datasets.py
+python extract_engineered_features_mfcc_env.py
 ```
 
 to extract "MFCCs + Envelope" features or
 
 ```sh
-python generate_interim_datasets.py
+python extract_engineered_features_all.py
 ```
 
 to extract 258-dimensional feature vectors to feed feature selection algorithms.
