@@ -129,7 +129,6 @@ dmypy.json
 .pyre/
 
 # Folders
-results
 _discarded
 .vscode
 .DS_Store
