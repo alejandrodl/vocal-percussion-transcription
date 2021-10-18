@@ -90,7 +90,7 @@ for classification with three alternative classifiers (logistic regression, rand
 Results
 -------
 
-Our models achieve the following performances on the AVP-LVT dataset with a KNN classifier:
+Our learnt embeddings and engineered features achieve the following performances on the AVP-LVT dataset with a KNN classifier:
 
 | Method              | Participant-wise Accuracy| Boxeme-wise Accuracy |
 | --------------------|------------------------- | -------------------- |
