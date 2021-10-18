@@ -1,5 +1,5 @@
-Deep Embeddings for Robust Vocal Percussion Transcription
-=========================================================
+Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription
+============================================================================
 
 This is the code repository for the ICASSP 2021 paper 
 *Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription*
