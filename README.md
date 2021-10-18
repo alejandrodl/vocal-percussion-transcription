@@ -1,5 +1,5 @@
-Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription
-============================================================================
+Deep Embeddings for Robust User-Based Vocal Percussion Transcription
+====================================================================
 
 This is the code repository for the ICASSP 2021 paper 
 *Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription*
@@ -9,9 +9,9 @@ Contents
 --------
 
 - `src` – the main codebase with scripts for processing data, models, and results (usage details [below](#Usage))
-- `data` – datasets used throughout the study (details in the [Datasets](#Datasets) section)
-- `models` – folder that hosts trained models (details in the [Models](#Models) section)
-- `results` – folder that hosts trained models (details in the [Results](#Results) section)
+- `data` – datasets used throughout the study.
+- `models` – folder that hosts trained models.
+- `results` – folder that hosts information relative to final accuracy results.
 
 Setup
 -----
