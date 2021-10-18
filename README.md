@@ -9,8 +9,8 @@ Contents
 --------
 
 - `src` – the main codebase with scripts for processing data, models, and results (usage details [below](#Usage))
-- `data` – datasets used throughout the study.
-- `models` – folder that hosts trained models.
+- `data` – datasets used throughout the study (download details [below](#Usage))
+- `models` – folder that hosts trained models (download details [below](#Pretrained Models))
 - `results` – folder that hosts information relative to final accuracy results.
 
 Setup
@@ -65,7 +65,7 @@ python eval_alt.py
 
 for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
 
-### Models
+### Pretrained Models
 
 Final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
 
