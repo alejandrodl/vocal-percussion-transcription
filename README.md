@@ -86,6 +86,9 @@ Our models achieve the following performances on the AVP-LVT dataset:
 | Phoneme Original    |        .876 ± .014       |      .840 ± .018     |
 | Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
+| E2E CNN             |        .896 ± .008       |      .877 ± .010     |
+
+Note: the last model, E2E CNN, is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation). The main drawback of this method is its long training time, which lasts for 4 minutes approx. on a typical CPU. For more details, see (link).
 
 Acknowledgments
 ---------------
