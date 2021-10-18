@@ -13,14 +13,13 @@ Contents
 - `models` – folder that hosts already trained models.
 - `results` – folder that hosts information relative to final accuracy results.
 
-Setup
------
+Requirements
+------------
 
-To install requirements and run setup:
+To install requirements:
 
 ```sh
 pip install -r requirements.txt
-pip install ./src
 ```
 
 Processed Files
@@ -31,26 +30,26 @@ Training deep learning models and feature selection algorithms is time-consuming
 Data
 ----
 
-Before running any commands, please [download](link_to_be_created_soon) the AVP-LVT dataset and, once downloaded, place its contents in the `data/external` directory.
+Before running any commands, [download](link_to_be_created_soon) the AVP-LVT dataset. Once downloaded, place its contents in the `data/external` directory.
 
-The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms. Also, several engineered (hand-crafted) feature vectors need to be extracted for the baseline methods.
+The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms. Also, several engineered (hand-crafted) feature vectors need to be extracted for the baseline methods using the same frame-wise parameters as for the spectrogram.
 
 To build spectrogram representations, which will be saved in the `data/interim` directory, run this command:
 
 ```sh
-python generate_interim_datasets.py
+python src/data/generate_interim_datasets.py
 ```
 
 To extract engineered features, also saved in the `data/interim` directory, run this command:
 
 ```sh
-python extract_engineered_features_mfcc_env.py
+python src/data/extract_engineered_features_mfcc_env.py
 ```
 
 to extract "MFCCs + Envelope" features or
 
 ```sh
-python extract_engineered_features_all.py
+python src/data/extract_engineered_features_all.py
 ```
 
 to extract 258-dimensional feature vectors to feed feature selection algorithms.
@@ -61,13 +60,13 @@ Training
 To train deep learning models and save embeddings predicted from evaluation data, run this command:
 
 ```sh
-python train_deep.py
+python src/models/train_deep.py
 ```
 
 To train feature selection methods and save feature importances, run this command:
 
 ```sh
-python train_selection.py
+python src/models/train_selection.py
 ```
 
 Evaluation
@@ -76,13 +75,13 @@ Evaluation
 To evaluate the performance of learnt embeddings and selected features, which should be stored in `data/processed` by now, run:
 
 ```sh
-python eval_knn.py
+python src/results/eval_knn.py
 ```
 
 for KNN classification or
 
 ```sh
-python eval_alt.py
+python src/results/eval_alt.py
 ```
 
 for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
