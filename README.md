@@ -2,7 +2,7 @@
 
 This repository currently holds the official implementation of "Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription" (under review). The repository will also hold future studies on real-time vocal percussion transcription.
 
-## 0 - Requirements
+## Requirements
 
 To install requirements:
 
@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 The AVP-LVT dataset can be accessed thorugh this link: (link). Once downloaded, place its contents in the "data/external" directory.
 
-## 1 - Spectrogram Representations
+## Spectrogram Representations
 
 The first step to reproduce this study is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms.
 
