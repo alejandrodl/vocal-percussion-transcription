@@ -25,7 +25,7 @@ pip install -r requirements.txt
 Processed Files
 ---------------
 
-Training deep learning models and feature selection is time-consuming, taking approximately 36 hours (GPU) and 48 hours (CPU) respectively. To avoid this inconvenience, we provide the final learnt embeddings and feature importances that are used in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump to the evaluation section below.
+Training deep learning models and feature selection algorithms is time-consuming, taking approximately 36 hours (GPU) and 48 hours (CPU) respectively. To avoid this, we provide the final learnt embeddings and feature importances arrays that are used in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump to the evaluation section [below](#Evaluation).
 
 Data
 ----
@@ -91,7 +91,7 @@ for classification with three alternative classifiers (logistic regression, rand
 Results
 -------
 
-Our models achieve the following performances on the AVP-LVT dataset:
+Our models achieve the following performances on the AVP-LVT dataset with a KNN classifier:
 
 | Method              | Participant-wise Accuracy| Boxeme-wise Accuracy |
 | --------------------|------------------------- | -------------------- |
@@ -107,12 +107,22 @@ Our models achieve the following performances on the AVP-LVT dataset:
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
 | E2E CNN             |        .896 ± .008       |      .877 ± .010     |
 
-Note: the last model, E2E CNN, is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation). The main drawback of this method is its long training time, which lasts for 4 minutes approx. on a typical CPU. For more details, see (link).
+Note: the last model, E2E CNN, is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription. The main drawback of this method is its long training time, which lasts for around 4 minutes on a typical CPU. For more details, see (link).
 
 Pretrained Models
 -----------------
 
-Final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
+Weights relative to the final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
+
+We recommend using the `syllable_level_cnn.h5` for feature extraction, as it yields the best performance in the table [above](#Results) and does not require training like the E2E CNN.
+
+TODO List
+---------
+
+- [x] Add full table with results
+- [] Add data and paper links
+- [] Finish tidying up code
+- [] Write routines for personal use
 
 Acknowledgments
 ---------------
