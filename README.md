@@ -74,18 +74,18 @@ Results
 
 Our models achieve the following performances on the AVP-LVT dataset:
 
-| Method                   | Participant-wise | Boxeme-wise |
-| ------------------------ |----------------- | ----------- |
-| GMM-HMM                  |           .725            |         .734         |
-| Timbre                   |           .840            |         .835         |
-| Feature Selection (max.) |        .827 ± .012        |      .795 ± .011     |
-| Instrument Original      |        .812 ± .012        |      .774 ± .014     |
-| Instrument Reduced       |        .779 ± .019        |      .738 ± .031     |
-| Syllable Original        |        .899 ± .005        |      .874 ± .008     |
-| Syllable Reduced         |        .883 ± .005        |      .852 ± .012     |
-| Phoneme Original         |        .876 ± .014        |      .840 ± .018     |
-| Phoneme Reduced          |        .874 ± .013        |      .838 ± .019     |
-| Boxeme Original          |        .861 ± .016        |      .832 ± .018     |
+| Method                   | Participant-wise Accuracy| Boxeme-wise Accuracy |
+| ------------------------ |------------------------- | -------------------- |
+| GMM-HMM                  |           .725           |         .734         |
+| Timbre                   |           .840           |         .835         |
+| Feature Selection (max.) |        .827 ± .012       |      .795 ± .011     |
+| Instrument Original      |        .812 ± .012       |      .774 ± .014     |
+| Instrument Reduced       |        .779 ± .019       |      .738 ± .031     |
+| Syllable Original        |        .899 ± .005       |      .874 ± .008     |
+| Syllable Reduced         |        .883 ± .005       |      .852 ± .012     |
+| Phoneme Original         |        .876 ± .014       |      .840 ± .018     |
+| Phoneme Reduced          |        .874 ± .013       |      .838 ± .019     |
+| Boxeme Original          |        .861 ± .016       |      .832 ± .018     |
 
 Acknowledgments
 ---------------
