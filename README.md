@@ -16,10 +16,11 @@ Contents
 Setup
 -----
 
-To install requirements:
+To install requirements and run setup:
 
 ```sh
 pip install -r requirements.txt
+pip install ./src
 ```
 
 Processed Files
