@@ -74,8 +74,8 @@ Results
 
 Our models achieve the following performances on the AVP-LVT dataset:
 
-| Method                   | Participant-wise Accuracy | Boxeme-wise Accuracy |
-| ------------------------ |-------------------------- | -------------------- |
+| Method                   | Participant-wise | Boxeme-wise |
+| ------------------------ |----------------- | ----------- |
 | GMM-HMM                  |           .725            |         .734         |
 | Timbre                   |           .840            |         .835         |
 | Feature Selection (max.) |        .827 ± .012        |      .795 ± .011     |
