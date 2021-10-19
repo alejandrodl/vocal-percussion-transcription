@@ -103,16 +103,13 @@ Our learnt embeddings and engineered features achieve the following performances
 | Phoneme Original    |        .876 ± .014       |      .840 ± .018     |
 | Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
-| E2E CNN             |        .896 ± .008       |      .877 ± .010     |
-
-<ins>Important Note</ins>: the E2E CNN model is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription in the AVP dataset. The main drawbacks of this method is its long training time, which lasts for around 4 minutes on a typical CPU, and its tendency to data overfitting. For more details, see the original [paper](https://arxiv.org/abs/2110.09223).
 
 Pretrained Models
 -----------------
 
 Weights relative to the final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
 
-We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results) and does not require training like the E2E CNN.
+We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results).
 
 TODO List
 ---------
