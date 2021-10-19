@@ -105,7 +105,7 @@ Our learnt embeddings and engineered features achieve the following performances
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
 | E2E CNN             |        .896 ± .008       |      .877 ± .010     |
 
-<ins>Important Note</ins>: the E2E CNN model is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription in the AVP dataset. The main drawbacks of this method is its long training time, which lasts for around 4 minutes on a typical CPU, and its tendency to data overfitting. For more details, see (link).
+<ins>Important Note</ins>: the E2E CNN model is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription in the AVP dataset. The main drawbacks of this method is its long training time, which lasts for around 4 minutes on a typical CPU, and its tendency to data overfitting. For more details, see https://arxiv.org/abs/2110.09223.
 
 Pretrained Models
 -----------------
