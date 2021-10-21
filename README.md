@@ -22,6 +22,8 @@ To install requirements:
 pip install -r requirements.txt
 ```
 
+If you are a Mac user, you may need to install [Essentia](https://essentia.upf.edu/installing.html) using Homebrew.
+
 Processed Files
 ---------------
 
@@ -91,18 +93,18 @@ Results
 
 Our learnt embeddings and engineered features achieve the following performances on the AVP-LVT dataset with a KNN classifier:
 
-| Method              | Participant-wise Accuracy| Boxeme-wise Accuracy |
-| --------------------|------------------------- | -------------------- |
-| GMM-HMM             |           .725           |         .734         |
-| Timbre              |           .840           |         .835         |
-| Feature Selection   |        .827 ± .012       |      .795 ± .011     |
-| Instrument Original |        .812 ± .012       |      .774 ± .014     |
-| Instrument Reduced  |        .779 ± .019       |      .738 ± .031     |
-| Syllable Original   |        .899 ± .005       |      .874 ± .008     |
-| Syllable Reduced    |        .883 ± .005       |      .852 ± .012     |
-| Phoneme Original    |        .876 ± .014       |      .840 ± .018     |
-| Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
-| Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
+| Method              | Participant-wise Accuracy | Boxeme-wise Accuracy |
+| --------------------|---------------------------| -------------------- |
+| GMM-HMM             |           .725            |         .734         |
+| Timbre              |           .840            |         .835         |
+| Feature Selection   |        .827 ± .012        |      .795 ± .011     |
+| Instrument Original |        .812 ± .012        |      .774 ± .014     |
+| Instrument Reduced  |        .779 ± .019        |      .738 ± .031     |
+| Syllable Original   |        .899 ± .005        |      .874 ± .008     |
+| Syllable Reduced    |        .883 ± .005        |      .852 ± .012     |
+| Phoneme Original    |        .876 ± .014        |      .840 ± .018     |
+| Phoneme Reduced     |        .874 ± .013        |      .838 ± .019     |
+| Boxeme Original     |        .861 ± .016        |      .832 ± .018     |
 
 Pretrained Models
 -----------------
