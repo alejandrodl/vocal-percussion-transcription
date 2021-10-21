@@ -24,11 +24,6 @@ pip install -r requirements.txt
 
 If you are a Mac user, you may need to install [Essentia](https://essentia.upf.edu/installing.html) using Homebrew.
 
-Processed Files
----------------
-
-Training deep learning models and feature selection algorithms is time-consuming, taking approximately 36 hours (GPU) and 48 hours (CPU) respectively. To avoid this, we provide the final learnt embeddings and feature importances arrays that are used in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump directly to the evaluation section [below](#Evaluation).
-
 Data
 ----
 
