@@ -5,6 +5,7 @@ This is the code repository for the ICASSP 2022 paper (under review)
 *Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription*
 by Alejandro Delgado, Emir Demirel, Vinod Subramanian, Charalampos Saitis, and Mark Sandler.
 
+
 Contents
 --------
 
@@ -22,10 +23,7 @@ To install requirements:
 pip install -r requirements.txt
 ```
 
-Processed Files
----------------
-
-Training deep learning models and feature selection algorithms is time-consuming, taking approximately 36 hours (GPU) and 48 hours (CPU) respectively. To avoid this, we provide the final learnt embeddings and feature importances arrays that are used in the evaluation section. These are organised in folders and may be directly [downloaded](link_to_be_created_soon) and placed in `data/processed` to jump directly to the evaluation section [below](#Evaluation).
+If you are a Mac user, you may need to install [Essentia](https://essentia.upf.edu/installing.html) using Homebrew.
 
 Data
 ----
