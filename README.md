@@ -30,7 +30,7 @@ Training deep learning models and feature selection algorithms is time-consuming
 Data
 ----
 
-Before running any commands, [download](link_to_be_created_soon) the AVP-LVT dataset. Once downloaded, place its contents in the `data/external` directory.
+Once the AVP-LVT dataset is [downloaded](https://zenodo.org/record/5578744#.YW7Wl9nML0o) and built following the instructions inside, place its contents in the `data/external` directory.
 
 The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms. Also, several engineered (hand-crafted) feature vectors need to be extracted for the baseline methods using the same frame-wise parameters as for the spectrogram.
 
@@ -103,16 +103,13 @@ Our learnt embeddings and engineered features achieve the following performances
 | Phoneme Original    |        .876 ± .014       |      .840 ± .018     |
 | Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
-| E2E CNN             |        .896 ± .008       |      .877 ± .010     |
-
-<ins>Important Note</ins>: the E2E CNN model is trained end-to-end (no embeddings nor KNN) on single participants' data exclusively (12x12 spectrograms + 15x data augmentation) and it is considered state-of-the-art for amateur vocal percussion transcription in the AVP dataset. The main drawbacks of this method is its long training time, which lasts for around 4 minutes on a typical CPU, and its tendency to data overfitting. For more details, see (link).
 
 Pretrained Models
 -----------------
 
 Weights relative to the final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
 
-We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results) and does not require training like the E2E CNN.
+We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results).
 
 TODO List
 ---------
