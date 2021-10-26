@@ -1,127 +1,85 @@
-Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription
+A GMM-HMM based approach for vocal percussive sound detection
 ============================================================================
 
-This is the code repository for the ICASSP 2022 paper (under review) 
-*Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription*
-by Alejandro Delgado, Emir Demirel, Vinod Subramanian, Charalampos Saitis, and Mark Sandler.
+This model is an adaptation of the traditional GMM-HMM based automatic speech recognition to the task of vocal percussive sound transcription. 
+  - According to this approach, there are 3 main building blocks of the transcriber: Language, Pronunciation and Acoustic Models.
+  - The language model can be perceived as statistical grammar approximation. In our approach, we consider percussive instrument types as word tokens and build a 4-gram language model.
+  - The pronunciation dictionary is generated based on the phoneme - to - instrument type annotations provided within the training set. This is used to convert phoneme probabilities to instrument type probabilities.
+  - The acoustic model learns a mapping between acoustic features (13-band MFCCs) and phonemes. This is based on the traditional triphone GMM-HMM approach which is optimized using the Expectation-Maximization algorithm.
+  - The acoustic, pronunciation and language models are composed into a single decoding graph using Weighted Finite State Transducers (WFST).
+  - The above steps are the standard Kaldi recipe for building a GMM-HMM based speech recognizer.
 
 
 Contents
 --------
 
-- `src` – the main codebase with scripts for processing data, models, and results (details in sections below).
-- `data` – datasets and processed data used throughout the study.
-- `models` – folder that hosts already trained models.
-- `results` – folder that hosts information relative to final accuracy results.
+- `conf` – Configuration files
+- `data` – Data information formatted in Kaldi style for easy processing
+- `exp` – This folder is generated after running the training script which stores the relevant info for each training step.
 
 Requirements
 ------------
 
-To install requirements:
+This package specifically requires Kaldi installation. For a detailed info please visit:
 
-```sh
-pip install -r requirements.txt
+```
+https://github.com/kaldi-asr/kaldi
 ```
 
-If you are a Mac user, you may need to install [Essentia](https://essentia.upf.edu/installing.html) using Homebrew.
+OR
+
+For installation with Docker, please refer to the example in   
+
+```
+https://github.com/emirdemirel/ASA_ICASSP2021/Dockerfile
+```
+
 
 Data
 ----
 
-Once the AVP-LVT dataset is [downloaded](https://zenodo.org/record/5578744#.YW7Wl9nML0o) and built following the instructions inside, place its contents in the `data/external` directory.
+Once the AVP-LVT dataset is [downloaded](https://zenodo.org/record/5578744#.YW7Wl9nML0o) and built following the instructions inside, place its contents in the `data/external` directory. (Same procedure as main page)
 
-The first step is to generate the spectrogram reperesentations that are later fed to the networks. These are 64x48 log Mel spectrograms computed with a frame size of 23 ms and a hop size of 8 ms. Also, several engineered (hand-crafted) feature vectors need to be extracted for the baseline methods using the same frame-wise parameters as for the spectrogram.
-
-To build spectrogram representations, which will be saved in the `data/interim` directory, run this command:
-
-```sh
-python src/data/generate_interim_datasets.py
-```
-
-To extract engineered features, also saved in the `data/interim` directory, run this command:
-
-```sh
-python src/data/extract_engineered_features_mfcc_env.py
-```
-
-to extract "MFCCs + Envelope" features or
-
-```sh
-python src/data/extract_engineered_features_all.py
-```
-
-to extract 258-dimensional feature vectors to feed feature selection algorithms.
 
 Training
 --------
 
-To train deep learning models and save embeddings predicted from evaluation data, run this command:
+To train and test this model, simply run the following on a terminal.
+
 
 ```sh
-python src/models/train_deep.py
+audio_path=../data/external
+run.sh $audio_path
 ```
 
-To train feature selection methods and save feature importances, run this command:
-
-```sh
-python src/models/train_selection.py
-```
-
-Evaluation
-----------
-
-To evaluate the performance of learnt embeddings and selected features, which should be stored in `data/processed` by now, run:
-
-```sh
-python src/results/eval_knn.py
-```
-
-for KNN classification or
-
-```sh
-python src/results/eval_alt.py
-```
-
-for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
 
 Results
 -------
 
-Our learnt embeddings and engineered features achieve the following performances on the AVP-LVT dataset with a KNN classifier:
+The scoring files are stored at
 
-| Method              | Participant-wise Accuracy| Boxeme-wise Accuracy |
-| --------------------|------------------------- | -------------------- |
-| GMM-HMM             |           .725           |         .734         |
-| Timbre              |           .840           |         .835         |
-| Feature Selection   |        .827 ± .012       |      .795 ± .011     |
-| Instrument Original |        .812 ± .012       |      .774 ± .014     |
-| Instrument Reduced  |        .779 ± .019       |      .738 ± .031     |
-| Syllable Original   |        .899 ± .005       |      .874 ± .008     |
-| Syllable Reduced    |        .883 ± .005       |      .852 ± .012     |
-| Phoneme Original    |        .876 ± .014       |      .840 ± .018     |
-| Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
-| Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
+```
+exp/${model}/decode_test/scoring_kaldi
+```
 
-Pretrained Models
------------------
+To retrieve utterance-wise results, please refer to
+```
+exp/${model}/decode_test/scoring_kaldi/wer_details/per_utt
+```
 
-Weights relative to the final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
+To retrieve participant-wise results, please refer to
 
-We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results).
+```
+exp/${model}/decode_test/scoring_kaldi/wer_details/per_spk
+```
 
-TODO List
----------
+where model can be ```mono```, ```tri1```, ```tri2b``` or ```tri3b``` (The last model referred to as in the paper).
 
-- [x] Add full table with results
-- Add data and paper links
-- Finish tidying up code
-- Write routines for personal use
+
 
 Acknowledgments
 ---------------
 This work has received funding from the European Union’s Horizon 2020 research and innovation
 programme under the Marie Skłodowska-Curie grant agreement No. 765068.
-
-
 
 
