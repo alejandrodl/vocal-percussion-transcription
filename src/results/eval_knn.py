@@ -27,6 +27,12 @@ modes = ['eng_mfcc_env','eng_all_classall','eng_all_classred','eng_all_syllall',
          'classall','classred','syllall','syllred','phonall','phonred','sound']
 clfs = ['knn']
 
+class_dict_avp = {'kd':0, 'sd':1, 'hhc':2, 'hho':3}
+class_dict_avp_replacer = class_dict_avp.get
+
+class_dict_lvt = {'Kick':0, 'Snare':1, 'HH':2}
+class_dict_lvt_replacer = class_dict_lvt.get
+
 num_iterations_models = 5
 num_cross_validation = 5
 
@@ -63,28 +69,10 @@ for mode in modes:
 
                     if dataset_name=='AVP':
                         classes_str = np.load('data/interim/AVP/Classes_Test_' + str(Part).zfill(2) + '.npy')
-                        classes_eval = np.zeros(len(classes_str))
-                        for n in range(len(classes_str)):
-                            if classes_str[n]=='kd':
-                                classes_eval[n] = 0
-                            elif classes_str[n]=='sd':
-                                classes_eval[n] = 1
-                            elif classes_str[n]=='hhc':
-                                classes_eval[n] = 2
-                            elif classes_str[n]=='hho':
-                                classes_eval[n] = 3
+                        classes_eval = [class_dict_avp_replacer(n,n) for n in classes_str]
 
                         classes_str = np.load('data/interim/AVP/Classes_Train_Aug_' + str(Part).zfill(2) + '.npy')
-                        classes = np.zeros(len(classes_str))
-                        for n in range(len(classes_str)):
-                            if classes_str[n]=='kd':
-                                classes[n] = 0
-                            elif classes_str[n]=='sd':
-                                classes[n] = 1
-                            elif classes_str[n]=='hhc':
-                                classes[n] = 2
-                            elif classes_str[n]=='hho':
-                                classes[n] = 3
+                        classes = [class_dict_avp_replacer(n,n) for n in classes_str]
 
                         if 'eng_all' not in mode:
                             if mode!='eng_mfcc_env':
@@ -117,24 +105,10 @@ for mode in modes:
 
                     elif dataset_name=='LVT':
                         classes_str = np.load('data/interim/LVT/Classes_Test_' + str(Part).zfill(2) + '.npy')
-                        classes_eval = np.zeros(len(classes_str))
-                        for n in range(len(classes_str)):
-                            if classes_str[n]=='Kick':
-                                classes_eval[n] = 0
-                            elif classes_str[n]=='Snare':
-                                classes_eval[n] = 1
-                            elif classes_str[n]=='HH':
-                                classes_eval[n] = 2
+                        classes_eval = [class_dict_lvt_replacer(n,n) for n in classes_str]
 
                         classes_str = np.load('data/interim/LVT/Classes_Train_Aug_' + str(Part).zfill(2) + '.npy')
-                        classes = np.zeros(len(classes_str))
-                        for n in range(len(classes_str)):
-                            if classes_str[n]=='Kick':
-                                classes[n] = 0
-                            elif classes_str[n]=='Snare':
-                                classes[n] = 1
-                            elif classes_str[n]=='HH':
-                                classes[n] = 2
+                        classes = [class_dict_lvt_replacer(n,n) for n in classes_str]
 
                         if 'eng_all' not in mode:
                             if mode!='eng_mfcc_env':
@@ -165,6 +139,11 @@ for mode in modes:
                                 indices_selected = indices_selected[:16]
                                 dataset = dataset[:,indices_selected]
                                 dataset_eval = dataset_eval[:,indices_selected]
+
+                    dataset = dataset.astype('float32')
+                    classes = classes.astype('float32')
+                    dataset_eval = dataset_eval.astype('float32')
+                    classes_eval = classes_eval.astype('float32')
                     
                     # Normalisation
 
@@ -178,11 +157,6 @@ for mode in modes:
                     std = np.std(np.vstack((dataset,dataset_eval)))
                     dataset = (dataset-mean)/(std+1e-16)
                     dataset_eval = (dataset_eval-mean)/(std+1e-16)
-
-                    dataset = dataset.astype('float32')
-                    classes = classes.astype('float32')
-                    dataset_eval = dataset_eval.astype('float32')
-                    classes_eval = classes_eval.astype('float32')
 
                     for b in range(len(clfs)):
                         clf = clfs[b]

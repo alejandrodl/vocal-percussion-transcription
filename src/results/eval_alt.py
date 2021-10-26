@@ -15,6 +15,8 @@ simplefilter(action='ignore')
 
 # Global parameters
 
+clfs_array = ['logr','rf','xgboost']
+
 list_test_participants_avp = [8,10,18,23]
 list_test_participants_lvt = [0,6,7,13]
 
@@ -72,36 +74,15 @@ for cl in clfs_array:
 
                 for cv in range(num_cross_validation):
                     for it_mod in range(num_iterations_models):
-                        print('\n')
-                        print('Hyperparameters: ' + str([Part,it_mod]))
-                        print('\n')
 
                         # Load features and classes from AVP and LVT
 
                         if dataset_name=='AVP':
                             classes_str = np.load('data/interim/AVP/Classes_Test_' + str(Part).zfill(2) + '.npy')
-                            classes_eval = np.zeros(len(classes_str))
-                            for n in range(len(classes_str)):
-                                if classes_str[n]=='kd':
-                                    classes_eval[n] = 0
-                                elif classes_str[n]=='sd':
-                                    classes_eval[n] = 1
-                                elif classes_str[n]=='hhc':
-                                    classes_eval[n] = 2
-                                elif classes_str[n]=='hho':
-                                    classes_eval[n] = 3
+                            classes_eval = [class_dict_avp_replacer(n,n) for n in classes_str]
 
                             classes_str = np.load('data/interim/AVP/Classes_Train_Aug_' + str(Part).zfill(2) + '.npy')
-                            classes = np.zeros(len(classes_str))
-                            for n in range(len(classes_str)):
-                                if classes_str[n]=='kd':
-                                    classes[n] = 0
-                                elif classes_str[n]=='sd':
-                                    classes[n] = 1
-                                elif classes_str[n]=='hhc':
-                                    classes[n] = 2
-                                elif classes_str[n]=='hho':
-                                    classes[n] = 3
+                            classes = [class_dict_avp_replacer(n,n) for n in classes_str]
 
                             if 'eng_all' not in mode:
                                 if mode!='eng_mfcc_env':
@@ -134,24 +115,10 @@ for cl in clfs_array:
 
                         elif dataset_name=='LVT':
                             classes_str = np.load('data/interim/LVT/Classes_Test_' + str(Part).zfill(2) + '.npy')
-                            classes_eval = np.zeros(len(classes_str))
-                            for n in range(len(classes_str)):
-                                if classes_str[n]=='Kick':
-                                    classes_eval[n] = 0
-                                elif classes_str[n]=='Snare':
-                                    classes_eval[n] = 1
-                                elif classes_str[n]=='HH':
-                                    classes_eval[n] = 2
+                            classes_eval = [class_dict_lvt_replacer(n,n) for n in classes_str]
 
                             classes_str = np.load('data/interim/LVT/Classes_Train_Aug_' + str(Part).zfill(2) + '.npy')
-                            classes = np.zeros(len(classes_str))
-                            for n in range(len(classes_str)):
-                                if classes_str[n]=='Kick':
-                                    classes[n] = 0
-                                elif classes_str[n]=='Snare':
-                                    classes[n] = 1
-                                elif classes_str[n]=='HH':
-                                    classes[n] = 2
+                            classes = [class_dict_lvt_replacer(n,n) for n in classes_str]
 
                             if 'eng_all' not in mode:
                                 if mode!='eng_mfcc_env':
@@ -182,6 +149,11 @@ for cl in clfs_array:
                                     indices_selected = indices_selected[:16]
                                     dataset = dataset[:,indices_selected]
                                     dataset_eval = dataset_eval[:,indices_selected]
+
+                        dataset = dataset.astype('float32')
+                        classes = classes.astype('float32')
+                        dataset_eval = dataset_eval.astype('float32')
+                        classes_eval = classes_eval.astype('float32')
                         
                         # Normalisation
                         
@@ -203,11 +175,6 @@ for cl in clfs_array:
                         np.random.shuffle(classes)
 
                         cutoff_train = int((percentage_train/100)*dataset.shape[0])
-
-                        dataset = dataset.astype('float32')
-                        classes = classes.astype('float32')
-                        dataset_eval = dataset_eval.astype('float32')
-                        classes_eval = classes_eval.astype('float32')
 
                     for b in range(len(clfs)):
                         clf = clfs[b]
