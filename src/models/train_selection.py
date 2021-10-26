@@ -4,9 +4,6 @@ import tensorflow as tf
 from itertools import combinations
 import tensorflow_probability as tfp
 
-#sys.path.append('/homes/adl30/vocal-percussion-transcription')
-#from src.utils import *
-
 from sklearn.inspection import permutation_importance
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -19,7 +16,6 @@ num_iterations = 5
 
 percentage_train = 80
 modes = ['classall','classred','syllall','syllred','phonall','phonred','sound']
-#modes = ['phonall','phonred','sound']
 mode_feat = 'eng_all'
 
 list_test_participants_avp = [8,10,18,23]
@@ -82,22 +78,14 @@ for m in range(len(modes)):
         if part in list_test_participants_avp:
             continue
         else:
-            if part<=9:
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_0' + str(part) + '.npy')))
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_avp_' + mode_feat + '_0' + str(part) + '.npy')))
-            else:
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_' + str(part) + '.npy')))
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_avp_' + mode_feat + '_' + str(part) + '.npy')))
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_avp_' + mode_feat + '_' + str(part).zfill(2) + '.npy')))
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_avp_' + mode_feat + '_' + str(part).zfill(2) + '.npy')))
     for part in range(20):
         if part in list_test_participants_lvt:
             continue
         else:
-            if part<=9:
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_0' + str(part) + '.npy')))
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_lvt_' + mode_feat + '_0' + str(part) + '.npy')))
-            else:
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_' + str(part) + '.npy')))
-                dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_lvt_' + mode_feat + '_' + str(part) + '.npy')))
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/train_features_lvt_' + mode_feat + '_' + str(part).zfill(2) + '.npy')))
+            dataset = np.vstack((dataset, np.load('data/processed/' + mode_feat + '/test_features_lvt_' + mode_feat + '_' + str(part).zfill(2) + '.npy')))
     dataset = dataset[1:]
 
     for feat in range(dataset.shape[-1]):
@@ -129,7 +117,6 @@ for m in range(len(modes)):
             num_nucleus = np.max(classes_nucleus)+1
 
     if 'syll' in mode:
-
         combinations = []
         classes = np.zeros(len(classes_onset))
         for n in range(len(classes_onset)):
@@ -144,9 +131,7 @@ for m in range(len(modes)):
         np.random.shuffle(classes)
 
         for cv in range(num_crossval):
-
             for it in range(num_iterations):
-
                 dataset_cv = dataset.copy()
                 classes_cv = classes.copy()
 
@@ -177,7 +162,6 @@ for m in range(len(modes)):
                 np.save('data/processed/' + mode + '/importances_sorted_eng_' + mode + '_' + str(cv) + '_' + str(it), importances_sorted)
 
     elif 'phon' in mode:
-
         np.random.seed(0)
         np.random.shuffle(classes_onset)
 
@@ -185,9 +169,7 @@ for m in range(len(modes)):
         np.random.shuffle(classes_nucleus)
 
         for cv in range(num_crossval):
-
             for it in range(num_iterations):
-
                 dataset_cv = dataset.copy()
                 classes_onset_cv = classes_onset.copy()
                 classes_nucleus_cv = classes_nucleus.copy()
@@ -236,7 +218,6 @@ for m in range(len(modes)):
                 np.save('data/processed/' + mode + '/importances_sorted_nucleus_eng_' + mode + '_' + str(cv) + '_' + str(it), importances_sorted)
         
     elif 'class' in mode or 'sound' in mode:
-
         if mode=='sound':
             if not os.path.isdir('data/processed/' + mode):
                 os.mkdir('data/processed/' + mode)
@@ -245,9 +226,7 @@ for m in range(len(modes)):
         np.random.shuffle(classes)
 
         for cv in range(num_crossval):
-
             for it in range(num_iterations):
-
                 dataset_cv = dataset.copy()
                 classes_cv = classes.copy()
 
