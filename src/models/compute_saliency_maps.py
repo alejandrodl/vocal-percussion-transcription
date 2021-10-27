@@ -57,6 +57,8 @@ class_weight = {'onset': onset_loss_weight, 'nucleus': nucleus_loss_weight}
 
 norm_min_max = [[0.0, 3.7073483668036347],[-9.210340371976182, 9.999500033329732e-05]]
 
+# Evaluation participants
+
 list_test_participants_avp = [8,10,18,23]
 list_test_participants_lvt = [0,6,7,13]
 
@@ -90,22 +92,14 @@ for m in range(len(modes)):
                 if n in list_test_participants_avp:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n).zfill(2) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_' + str(n).zfill(2) + '.npy')))
             for n in range(20):
                 if n in list_test_participants_lvt:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n).zfill(2) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_' + str(n).zfill(2) + '.npy')))
             pretrain_dataset = pretrain_dataset[1:]
 
         else:
@@ -115,26 +109,16 @@ for m in range(len(modes)):
                 if n in list_test_participants_avp:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_Aug_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_' + str(n).zfill(2) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n).zfill(2) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_Aug_' + str(n).zfill(2) + '.npy')))
             for n in range(20):
                 if n in list_test_participants_lvt:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_Aug_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_' + str(n).zfill(2) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n).zfill(2) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_Aug_' + str(n).zfill(2) + '.npy')))
             pretrain_dataset = pretrain_dataset[1:]
 
         # Spectrogram normalisation
@@ -295,8 +279,5 @@ for m in range(len(modes)):
                 
             plt.gca().invert_yaxis()
             if sound_labels[i]==predicted:
-                if i<=9:
-                    plt.savefig('data/processed/spatial_abs_grad_bottom/saliency_0'+str(i)+'_'+sound_labels[i]+'_'+str(predicted)+'.png')
-                else:
-                    plt.savefig('data/processed/spatial_abs_grad_bottom/saliency_'+str(i)+'_'+sound_labels[i]+'_'+str(predicted)+'.png')
+                plt.savefig('data/processed/spatial_abs_grad_bottom/saliency_'+str(i).zfill(2)+'_'+sound_labels[i]+'_'+str(predicted)+'.png')
             plt.close()

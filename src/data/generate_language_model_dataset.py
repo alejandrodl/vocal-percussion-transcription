@@ -3,11 +3,15 @@ import numpy as np
 
 
 
+# Evaluation participants
+
 list_selected_test_avp = [8,10,18,23]
 list_selected_test_lvt = [0,6,7,13]
 
+print('Computing Test...')
 
-print('Test...')
+if not os.path.isdir('data/interim/sequence_datasets'):
+    os.mkdir('data/interim/sequence_datasets')
 
 c = 0
 
@@ -15,7 +19,7 @@ with open('data/interim/sequence_datasets/sequence_dataset_test.txt', 'a') as tx
 
     # AVP Personal
 
-    path_csv = 'data/external/AVP_Dataset/Personal'
+    path_csv = 'data/external/AVP-LVT_Dataset/AVP_Dataset/Personal'
 
     list_csv = []
     for path, subdirs, files in os.walk(path_csv):
@@ -36,7 +40,7 @@ with open('data/interim/sequence_datasets/sequence_dataset_test.txt', 'a') as tx
 
     # AVP Fixed
 
-    path_csv = 'data/external/AVP_Dataset/Fixed'
+    path_csv = 'data/external/AVP-LVT_Dataset/AVP_Dataset/Fixed'
 
     list_csv = []
     for path, subdirs, files in os.walk(path_csv):
@@ -57,7 +61,7 @@ with open('data/interim/sequence_datasets/sequence_dataset_test.txt', 'a') as tx
 
     # LVT with HH as HHC
 
-    path_csv = 'data/external/LVT_Dataset'
+    path_csv = 'data/external/AVP-LVT_Dataset/LVT_Dataset'
 
     list_csv = []
     for path, subdirs, files in os.walk(path_csv):
@@ -85,7 +89,7 @@ with open('data/interim/sequence_datasets/sequence_dataset_test.txt', 'a') as tx
 
     # LVT with HH as HHO
 
-    path_csv = 'data/external/LVT_Dataset'
+    path_csv = 'data/external/AVP-LVT_Dataset/LVT_Dataset'
 
     list_csv = []
     for path, subdirs, files in os.walk(path_csv):
@@ -114,7 +118,7 @@ with open('data/interim/sequence_datasets/sequence_dataset_test.txt', 'a') as tx
     print(c)
 
 
-print('Train-Val')
+print('Computing Train-Val...')
 
 for fold in range(8):
 
@@ -127,7 +131,7 @@ for fold in range(8):
 
         # AVP Personal
 
-        path_csv = 'data/external/AVP_Dataset/Personal'
+        path_csv = 'data/external/AVP-LVT_Dataset/AVP_Dataset/Personal'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -152,7 +156,7 @@ for fold in range(8):
 
         # AVP Fixed
 
-        path_csv = 'data/external/AVP_Dataset/Fixed'
+        path_csv = 'data/external/AVP-LVT_Dataset/AVP_Dataset/Fixed'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -177,7 +181,7 @@ for fold in range(8):
 
         # LVT Fixed with HH as HHC
 
-        path_csv = 'data/external/LVT_Dataset'
+        path_csv = 'data/external/AVP-LVT_Dataset/LVT_Dataset'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -209,7 +213,7 @@ for fold in range(8):
 
         # LVT Fixed with HH as HHO
 
-        path_csv = 'data/external/LVT_Dataset'
+        path_csv = 'data/external/AVP-LVT_Dataset/LVT_Dataset'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -247,7 +251,7 @@ for fold in range(8):
 
         # AVP Personal
 
-        path_csv = 'data/external/AVP_Dataset/Personal'
+        path_csv = 'data/external/AVP-LVT_Dataset/AVP_Dataset/Personal'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -274,7 +278,7 @@ for fold in range(8):
 
         # AVP Fixed
 
-        path_csv = 'data/external/AVP_Dataset/Fixed'
+        path_csv = 'data/external/AVP-LVT_Dataset/AVP_Dataset/Fixed'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -301,7 +305,7 @@ for fold in range(8):
 
         # LVT Fixed with HH as HHC
 
-        path_csv = 'data/external/LVT_Dataset'
+        path_csv = 'data/external/AVP-LVT_Dataset/LVT_Dataset'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -335,7 +339,7 @@ for fold in range(8):
 
         # LVT Fixed with HH as HHO
 
-        path_csv = 'data/external/LVT_Dataset'
+        path_csv = 'data/external/AVP-LVT_Dataset/LVT_Dataset'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):
@@ -369,7 +373,7 @@ for fold in range(8):
 
         # BTX Fixed
 
-        path_csv = 'data/external/Beatbox_Set'
+        path_csv = 'data/external/AVP-LVT_Dataset/Beatbox_Set'
 
         list_csv = []
         for path, subdirs, files in os.walk(path_csv):

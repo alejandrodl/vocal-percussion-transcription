@@ -12,112 +12,7 @@ from librosa.util import frame
 import os
 import pyrubberband as pyrb
 
-
-def Create_Phoneme_Labels(Onset_Phonemes, Nucleus_Phonemes):
-
-    Onset_Phonemes_Labels = np.zeros(Onset_Phonemes.shape)
-    for n in range(len(Onset_Phonemes)):
-        if 'ts' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 0
-        elif 'tʃ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 1
-        elif 'tɕ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 2
-        elif 'kg' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 3
-        elif 'tʒ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 4
-        elif 'ʡʢ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 5
-        elif 'dʒ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 6
-        elif 'kʃ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Labels[n] = 7
-        elif Onset_Phonemes[n]=='t':
-            Onset_Phonemes_Labels[n] = 8
-        elif Onset_Phonemes[n]=='p':
-            Onset_Phonemes_Labels[n] = 9
-        elif Onset_Phonemes[n]=='k':
-            Onset_Phonemes_Labels[n] = 10
-        elif Onset_Phonemes[n]=='s':
-            Onset_Phonemes_Labels[n] = 11
-        elif Onset_Phonemes[n]=='!':
-            Onset_Phonemes_Labels[n] = 12
-            
-    Nucleus_Phonemes_Labels = np.zeros(Nucleus_Phonemes.shape)
-    for n in range(len(Nucleus_Phonemes)):
-        if 'a' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 0
-        elif 'e' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 1
-        elif 'i' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 2
-        elif 'o' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 3
-        elif 'u' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 4
-        elif 'æ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 5
-        elif 'œ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 6
-        elif 'ə' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 7
-        elif 'ʊ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 8
-        elif 'ɯ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 9
-        elif 'y' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 10
-        elif 'ɪ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 11
-        elif 'ɐ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 12
-        elif 'ʌ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 13
-        elif 'h' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Labels[n] = 14
-        else:
-            Nucleus_Phonemes_Labels[n] = 15
-               
-    Onset_Phonemes_Reduced_Labels = np.zeros(Onset_Phonemes.shape)
-    for n in range(len(Onset_Phonemes)):
-        if 'ts' in Onset_Phonemes[n] or Onset_Phonemes[n]=='s':
-            Onset_Phonemes_Reduced_Labels[n] = 0
-        elif 'tʃ' in Onset_Phonemes[n] or 'tɕ' in Onset_Phonemes[n] or 'dʒ' in Onset_Phonemes[n] or 'tʒ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Reduced_Labels[n] = 1
-        elif 'kg' in Onset_Phonemes[n] or Onset_Phonemes[n]=='k' or 'kʃ' in Onset_Phonemes[n]:
-            Onset_Phonemes_Reduced_Labels[n] = 2
-        elif 'ʡʢ' in Onset_Phonemes[n] or Onset_Phonemes[n]=='p':
-            Onset_Phonemes_Reduced_Labels[n] = 3
-        elif Onset_Phonemes[n]=='t' or Onset_Phonemes[n]=='!':
-            Onset_Phonemes_Reduced_Labels[n] = 4
-            
-    Nucleus_Phonemes_Reduced_Labels = np.zeros(Nucleus_Phonemes.shape)
-    for n in range(len(Nucleus_Phonemes)):
-        if 'a' in Nucleus_Phonemes[n] or 'æ' in Nucleus_Phonemes[n] or 'ɐ' in Nucleus_Phonemes[n] or 'ʌ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 0
-        elif 'e' in Nucleus_Phonemes[n] or 'œ' in Nucleus_Phonemes[n] or 'ə' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 1
-        elif 'i' in Nucleus_Phonemes[n] or 'y' in Nucleus_Phonemes[n] or 'ɪ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 2
-        elif 'o' in Nucleus_Phonemes[n] or 'ʊ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 3
-        elif 'u' in Nucleus_Phonemes[n] or 'ɯ' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 4
-        elif 'h' in Nucleus_Phonemes[n]:
-            Nucleus_Phonemes_Reduced_Labels[n] = 5
-        else:
-            Nucleus_Phonemes_Reduced_Labels[n] = 6
-            
-    return Onset_Phonemes_Labels, Nucleus_Phonemes_Labels, Onset_Phonemes_Reduced_Labels, Nucleus_Phonemes_Reduced_Labels
-
-
-    
-def pitch_shift(data, sampling_rate, pitch_semitones):
-    return pyrb.pitch_shift(data, sampling_rate, pitch_semitones)
-
-def time_stretch(data, stretch_factor):
-    return pyrb.time_stretch(data, 44100, stretch_factor)
+from utils import Create_Phoneme_Labels, pitch_shift, time_stretch
 
 
 
@@ -194,12 +89,8 @@ for part in range(28):
             elif i==3:
                 class_str = 'Snare'
 
-            if part<=9:
-                sf.write('data/external/AVP_Augmented/Dataset_Train_' + class_str + '_0' + str(part) + '_' + str(k) + '.wav', audio, 44100)
-                np.save('data/external/AVP_Augmented/Onsets_Train_' + class_str + '_0' + str(part) + '_' + str(k), onsets)
-            else:
-                sf.write('data/external/AVP_Augmented/Dataset_Train_' + class_str + '_' + str(part) + '_' + str(k) + '.wav', audio, 44100)
-                np.save('data/external/AVP_Augmented/Onsets_Train_' + class_str + '_' + str(part) + '_' + str(k), onsets)
+            sf.write('data/external/AVP_Augmented/Dataset_Train_' + class_str + '_' + str(part).zfill(2) + '_' + str(k) + '.wav', audio, 44100)
+            np.save('data/external/AVP_Augmented/Onsets_Train_' + class_str + '_' + str(part).zfill(2) + '_' + str(k), onsets)
 
 
 
@@ -258,12 +149,8 @@ for i in range(len(list_wav)):
 
         audio = np.concatenate((audio,np.zeros(2048)))
 
-        if i<=9:
-            sf.write('data/external/LVT_Audio/Dataset_Train_0' + str(i) + '_' + str(k) + '.wav', audio, 44100)
-            np.save('data/external/LVT_Audio/Onsets_Train_0' + str(i) + '_' + str(k), onsets)
-        else:
-            sf.write('data/external/LVT_Audio/Dataset_Train_' + str(i) + '_' + str(k) + '.wav', audio, 44100)
-            np.save('data/external/LVT_Audio/Onsets_Train_' + str(i) + '_' + str(k), onsets)
+        sf.write('data/external/LVT_Audio/Dataset_Train_' + str(i).zfill(2) + '_' + str(k) + '.wav', audio, 44100)
+        np.save('data/external/LVT_Audio/Onsets_Train_' + str(i).zfill(2) + '_' + str(k), onsets)
 
 
 
@@ -310,14 +197,9 @@ for i in range(len(list_wav)):
 
     classes = np.loadtxt(list_csv[i], delimiter=',', usecols=1, dtype=np.unicode_)
 
-    if i<=9:
-        sf.write('data/external/LVT_Audio/Dataset_Train_0' + str(i) + '.wav', audio, 44100)
-        np.save('data/external/LVT_Audio/Onsets_Train_0' + str(i), onsets)
-        np.save('data/external/LVT_Audio/Classes_Train_0' + str(i), classes)
-    else:
-        sf.write('data/external/LVT_Audio/Dataset_Train_' + str(i) + '.wav', audio, 44100)
-        np.save('data/external/LVT_Audio/Onsets_Train_' + str(i), onsets)
-        np.save('data/external/LVT_Audio/Classes_Train_' + str(i), classes)
+    sf.write('data/external/LVT_Audio/Dataset_Train_' + str(i).zfill(2) + '.wav', audio, 44100)
+    np.save('data/external/LVT_Audio/Onsets_Train_' + str(i).zfill(2), onsets)
+    np.save('data/external/LVT_Audio/Classes_Train_' + str(i).zfill(2), classes)
 
 
 
@@ -364,11 +246,6 @@ for i in range(len(list_wav)):
 
     classes = np.loadtxt(list_csv[i], delimiter=',', usecols=1, dtype=np.unicode_)
 
-    if i<=9:
-        sf.write('data/external/LVT_Audio/Dataset_Test_0' + str(i) + '.wav', audio, 44100)
-        np.save('data/external/LVT_Audio/Onsets_Test_0' + str(i), onsets)
-        np.save('data/external/LVT_Audio/Classes_Test_0' + str(i), classes)
-    else:
-        sf.write('data/external/LVT_Audio/Dataset_Test_' + str(i) + '.wav', audio, 44100)
-        np.save('data/external/LVT_Audio/Onsets_Test_' + str(i), onsets)
-        np.save('data/external/LVT_Audio/Classes_Test_' + str(i), classes)
+    sf.write('data/external/LVT_Audio/Dataset_Test_' + str(i).zfill(2) + '.wav', audio, 44100)
+    np.save('data/external/LVT_Audio/Onsets_Test_' + str(i).zfill(2), onsets)
+    np.save('data/external/LVT_Audio/Classes_Test_' + str(i).zfill(2), classes)

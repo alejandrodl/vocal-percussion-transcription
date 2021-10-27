@@ -306,10 +306,7 @@ if not os.path.isdir('../../data/processed/' + mode):
 
 for part in range(28):
 
-    if part<=9:
-        list_audio = np.load('../../data/external/AVP_Dataset_Audio/Dataset_Test_0' + str(part) + '.npy', allow_pickle=True)
-    else:
-        list_audio = np.load('../../data/external/AVP_Dataset_Audio/Dataset_Test_' + str(part) + '.npy', allow_pickle=True)
+    list_audio = np.load('../../data/external/AVP_Dataset_Audio/Dataset_Test_' + str(part).zfill(2) + '.npy', allow_pickle=True)
 
     print(list_audio.shape)
     extractor = extract_features()
@@ -320,17 +317,11 @@ for part in range(28):
     if part==0:
         print(features.shape)
 
-    if part<=9:
-        np.save('../../data/processed/' + mode + '/test_features_avp_' + mode + '_0' + str(part), features)
-    else:
-        np.save('../../data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(part), features)
+    np.save('../../data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(part).zfill(2), features)
 
 for part in range(28):
 
-    if part<=9:
-        list_audio = np.load('../../data/external/AVP_Dataset_Audio/Dataset_Train_0' + str(part) + '.npy', allow_pickle=True)
-    else:
-        list_audio = np.load('../../data/external/AVP_Dataset_Audio/Dataset_Train_' + str(part) + '.npy', allow_pickle=True)
+    list_audio = np.load('../../data/external/AVP_Dataset_Audio/Dataset_Train_' + str(part).zfill(2) + '.npy', allow_pickle=True)
 
     print(list_audio.shape)
     extractor = extract_features()
@@ -341,18 +332,12 @@ for part in range(28):
     if part==0:
         print(features.shape)
 
-    if part<=9:
-        np.save('../../data/processed/' + mode + '/train_features_avp_' + mode + '_0' + str(part), features)
-    else:
-        np.save('../../data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(part), features)
+    np.save('../../data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(part).zfill(2), features)
 
 
 for part in range(20):
 
-    if part<=9:
-        list_audio = np.load('../../data/external/LVT_Dataset_Audio/Dataset_Test_0' + str(part) + '.npy', allow_pickle=True)
-    else:
-        list_audio = np.load('../../data/external/LVT_Dataset_Audio/Dataset_Test_' + str(part) + '.npy', allow_pickle=True)
+    list_audio = np.load('../../data/external/LVT_Dataset_Audio/Dataset_Test_' + str(part).zfill(2) + '.npy', allow_pickle=True)
 
     print(list_audio.shape)
     extractor = extract_features()
@@ -363,17 +348,11 @@ for part in range(20):
     if part==0:
         print(features.shape)
 
-    if part<=9:
-        np.save('../../data/processed/' + mode + '/test_features_lvt_' + mode + '_0' + str(part), features)
-    else:
-        np.save('../../data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(part), features)
+    np.save('../../data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(part).zfill(2), features)
 
 for part in range(20):
 
-    if part<=9:
-        list_audio = np.load('../../data/external/LVT_Dataset_Audio/Dataset_Train_0' + str(part) + '.npy', allow_pickle=True)
-    else:
-        list_audio = np.load('../../data/external/LVT_Dataset_Audio/Dataset_Train_' + str(part) + '.npy', allow_pickle=True)
+    list_audio = np.load('../../data/external/LVT_Dataset_Audio/Dataset_Train_' + str(part).zfill(2) + '.npy', allow_pickle=True)
 
     print(list_audio.shape)
     extractor = extract_features()
@@ -384,9 +363,6 @@ for part in range(20):
     if part==0:
         print(features.shape)
 
-    if part<=9:
-        np.save('../../data/processed/' + mode + '/train_features_lvt_' + mode + '_0' + str(part), features)
-    else:
-        np.save('../../data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(part), features)
+    np.save('../../data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(part).zfill(2), features)
 
 

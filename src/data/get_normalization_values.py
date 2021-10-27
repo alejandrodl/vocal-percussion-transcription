@@ -1,6 +1,7 @@
 import numpy as np
 
 
+# Evaluation participants
 
 list_test_participants_avp = [8,10,18,23]
 list_test_participants_lvt = [0,6,7,13]

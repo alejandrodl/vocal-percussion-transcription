@@ -55,6 +55,8 @@ class_weight = {'onset': onset_loss_weight, 'nucleus': nucleus_loss_weight}
 
 norm_min_max = [[0.0, 3.7073483668036347],[-9.210340371976182, 9.999500033329732e-05]]
 
+# Evaluation participants
+
 list_test_participants_avp = [8,10,18,23]
 list_test_participants_lvt = [0,6,7,13]
 
@@ -88,22 +90,14 @@ for m in range(len(modes)):
                 if n in list_test_participants_avp:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n).zfill(2)  + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_' + str(n).zfill(2)  + '.npy')))
             for n in range(20):
                 if n in list_test_participants_lvt:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n).zfill(2)  + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_' + str(n).zfill(2)  + '.npy')))
             pretrain_dataset = pretrain_dataset[1:]
 
         else:
@@ -113,26 +107,16 @@ for m in range(len(modes)):
                 if n in list_test_participants_avp:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_Aug_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_' + str(n).zfill(2)  + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Train_Aug_' + str(n).zfill(2)  + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/AVP/Dataset_Test_Aug_' + str(n).zfill(2)  + '.npy')))
             for n in range(20):
                 if n in list_test_participants_lvt:
                     continue
                 else:
-                    if n<=9:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_0' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_Aug_0' + str(n) + '.npy')))
-                    else:
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n) + '.npy')))
-                        pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_Aug_' + str(n) + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_' + str(n).zfill(2)  + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Train_Aug_' + str(n).zfill(2)  + '.npy')))
+                    pretrain_dataset = np.vstack((pretrain_dataset, np.load('data/interim/LVT/Dataset_Test_Aug_' + str(n).zfill(2)  + '.npy')))
             pretrain_dataset = pretrain_dataset[1:]
 
         # Spectrogram normalisation
@@ -159,7 +143,7 @@ for m in range(len(modes)):
                 num_onset = np.max(classes_onset)+1
                 num_nucleus = np.max(classes_nucleus)+1
 
-        # Train models
+        # Train models via 5-fold cross-validation (saving each model per fold)
 
         sss = StratifiedShuffleSplit(n_splits=num_crossval, test_size=0.2, random_state=0)
 
@@ -251,14 +235,9 @@ for m in range(len(modes)):
 
                 for part in list_test_participants_avp:
 
-                    if part<=9:
-                        train_dataset = np.load('data/interim/AVP/Dataset_Train_0' + str(part) + '.npy')
-                        train_dataset_aug = np.load('data/interim/AVP/Dataset_Train_Aug_0' + str(part) + '.npy')
-                        test_dataset = np.load('data/interim/AVP/Dataset_Test_0' + str(part) + '.npy')
-                    else:
-                        train_dataset = np.load('data/interim/AVP/Dataset_Train_' + str(part) + '.npy')
-                        train_dataset_aug = np.load('data/interim/AVP/Dataset_Train_Aug_' + str(part) + '.npy')
-                        test_dataset = np.load('data/interim/AVP/Dataset_Test_' + str(part) + '.npy')
+                    train_dataset = np.load('data/interim/AVP/Dataset_Train_' + str(part).zfill(2) + '.npy')
+                    train_dataset_aug = np.load('data/interim/AVP/Dataset_Train_Aug_' + str(part).zfill(2) + '.npy')
+                    test_dataset = np.load('data/interim/AVP/Dataset_Test_' + str(part).zfill(2) + '.npy')
 
                     train_dataset = (train_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
                     train_dataset = np.log(train_dataset+1e-4)
@@ -298,25 +277,15 @@ for m in range(len(modes)):
                     print(test_features.shape)
                     print('')
 
-                    if part<=9:
-                        np.save('data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
-                        np.save('data/processed/' + mode + '/train_features_aug_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
-                        np.save('data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), test_features)
-                    else:
-                        np.save('data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
-                        np.save('data/processed/' + mode + '/train_features_aug_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
-                        np.save('data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), test_features) 
+                    np.save('data/processed/' + mode + '/train_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part).zfill(2) + '_' + str(cv) + '_' + str(it), train_features)
+                    np.save('data/processed/' + mode + '/train_features_aug_avp_' + mode + '_' + str(latent_dim) + '_' + str(part).zfill(2) + '_' + str(cv) + '_' + str(it), train_features_aug)
+                    np.save('data/processed/' + mode + '/test_features_avp_' + mode + '_' + str(latent_dim) + '_' + str(part).zfill(2) + '_' + str(cv) + '_' + str(it), test_features) 
 
                 for part in list_test_participants_lvt:
 
-                    if part<=9:
-                        train_dataset = np.load('data/interim/LVT/Dataset_Train_0' + str(part) + '.npy')
-                        train_dataset_aug = np.load('data/interim/LVT/Dataset_Train_Aug_0' + str(part) + '.npy')
-                        test_dataset = np.load('data/interim/LVT/Dataset_Test_0' + str(part) + '.npy')
-                    else:
-                        train_dataset = np.load('data/interim/LVT/Dataset_Train_' + str(part) + '.npy')
-                        train_dataset_aug = np.load('data/interim/LVT/Dataset_Train_Aug_' + str(part) + '.npy')
-                        test_dataset = np.load('data/interim/LVT/Dataset_Test_' + str(part) + '.npy')
+                    train_dataset = np.load('data/interim/LVT/Dataset_Train_' + str(part).zfill(2) + '.npy')
+                    train_dataset_aug = np.load('data/interim/LVT/Dataset_Train_Aug_' + str(part).zfill(2) + '.npy')
+                    test_dataset = np.load('data/interim/LVT/Dataset_Test_' + str(part).zfill(2) + '.npy')
 
                     train_dataset = (train_dataset-norm_min_max[0][0])/(norm_min_max[0][1]-norm_min_max[0][0]+1e-16)
                     train_dataset = np.log(train_dataset+1e-4)
@@ -356,20 +325,9 @@ for m in range(len(modes)):
                     print(test_features.shape)
                     print('')
 
-                    if part<=9:
-                        np.save('data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
-                        np.save('data/processed/' + mode + '/train_features_aug_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
-                        np.save('data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), test_features)
-                        if mode=='vae':
-                            np.save('data/processed/' + mode + '/reconstructions/reconstructions_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), test_reconstructions)
-                            np.save('data/processed/' + mode + '/reconstructions/originals_' + mode + '_' + str(latent_dim) + '_0' + str(part) + '_' + str(cv) + '_' + str(it), test_dataset)
-                    else:
-                        np.save('data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features)
-                        np.save('data/processed/' + mode + '/train_features_aug_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), train_features_aug)
-                        np.save('data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), test_features)
-                        if mode=='vae':
-                            np.save('data/processed/' + mode + '/reconstructions/reconstructions_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), test_reconstructions)
-                            np.save('data/processed/' + mode + '/reconstructions/originals_' + mode + '_' + str(latent_dim) + '_' + str(part) + '_' + str(cv) + '_' + str(it), test_dataset)
+                    np.save('data/processed/' + mode + '/train_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part).zfill(2) + '_' + str(cv) + '_' + str(it), train_features)
+                    np.save('data/processed/' + mode + '/train_features_aug_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part).zfill(2) + '_' + str(cv) + '_' + str(it), train_features_aug)
+                    np.save('data/processed/' + mode + '/test_features_lvt_' + mode + '_' + str(latent_dim) + '_' + str(part).zfill(2) + '_' + str(cv) + '_' + str(it), test_features)
 
                 tf.keras.backend.clear_session()
 
