@@ -48,7 +48,7 @@ To train and test this model, simply run the following on a terminal.
 
 
 ```sh
-audio_path=../data/external
+audio_path=../../data/external
 run.sh $audio_path
 ```
 
