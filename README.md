@@ -125,7 +125,7 @@ TODO List
 ---------
 
 - [x] Add full table with results
-- Add data and paper links
+- [x] Add links
 - Finish tidying up code
 - Write routines for personal use
 
