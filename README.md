@@ -14,6 +14,7 @@ Contents
 - `models` – folder that hosts already trained models.
 - `results` – folder that hosts information relative to final accuracy results.
 
+
 Requirements
 ------------
 
@@ -24,6 +25,7 @@ pip install -r requirements.txt
 ```
 
 If you are a Mac user, you may need to install [Essentia](https://essentia.upf.edu/installing.html) using Homebrew.
+
 
 Data
 ----
@@ -52,6 +54,7 @@ python src/data/extract_engineered_features_all.py
 
 to extract 258-dimensional feature vectors to feed feature selection algorithms.
 
+
 Training
 --------
 
@@ -66,6 +69,7 @@ To train feature selection methods and save feature importances, run this comman
 ```sh
 python src/models/train_selection.py
 ```
+
 
 Evaluation
 ----------
@@ -84,6 +88,7 @@ python src/results/eval_alt.py
 
 for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
 
+
 GMM-HMM
 -------
 
@@ -95,6 +100,7 @@ To train and test the GMM-HMM model, simply run the following command on a termi
 audio_path=../../data/external
 run.sh $audio_path
 ```
+
 
 Results
 -------
@@ -114,12 +120,26 @@ Our learnt embeddings and engineered features achieve the following performances
 | Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
 | Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
 
+
 Pretrained Models
 -----------------
 
 Weights relative to the final pretrained models for each of the seven embedding learning methods can be downloaded here: (link)
 
 We recommend using the `cnn_syllable_level_original.h5` for feature extraction, as it yields the best performance in the table [above](#Results).
+
+
+Saliency Maps
+-------------
+
+Saliency maps of 30 input spectrograms of different instrument classes can be computed by running:
+
+```sh
+python src/models/compute_saliency_maps.py
+```
+
+The resulting maps are saved in JPEG format in the folder `data/processed/spatial_abs_grad_bottom`. We provide the 30 already computed maps in the subfolders of such directory.
+
 
 TODO List
 ---------
@@ -128,6 +148,7 @@ TODO List
 - [x] Add links
 - Finish tidying up code
 - Write routines for personal use
+
 
 Acknowledgments
 ---------------
