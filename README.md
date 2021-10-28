@@ -84,6 +84,18 @@ python src/results/eval_alt.py
 
 for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
 
+GMM-HMM
+-------
+
+To reproduce the results for the GMM-HMM model, all routines relative to data engineering, model training, and model evaluation are included in `src/models/GMM-HMM`. The folder includes its own README file with instructions.
+
+To train and test the GMM-HMM model, simply run the following command on a terminal:
+
+```sh
+audio_path=../../data/external
+run.sh $audio_path
+```
+
 Results
 -------
 
