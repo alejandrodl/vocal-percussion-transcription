@@ -37,19 +37,19 @@ The first step is to generate the spectrogram reperesentations that are later fe
 To build spectrogram representations, which will be saved in the `data/interim` directory, run this command:
 
 ```sh
-python src/data/generate_interim_datasets.py
+python generate_interim_datasets.py
 ```
 
 To extract engineered features, also saved in the `data/interim` directory, run this command:
 
 ```sh
-python src/data/extract_engineered_features_mfcc_env.py
+python extract_engineered_features_mfcc_env.py
 ```
 
 to extract "MFCCs + Envelope" features or
 
 ```sh
-python src/data/extract_engineered_features_all.py
+python extract_engineered_features_all.py
 ```
 
 to extract 258-dimensional feature vectors to feed feature selection algorithms.
@@ -61,13 +61,13 @@ Training
 To train deep learning models and save embeddings predicted from evaluation data, run this command:
 
 ```sh
-python src/models/train_deep.py
+python train_deep.py
 ```
 
 To train feature selection methods and save feature importances, run this command:
 
 ```sh
-python src/models/train_selection.py
+python train_selection.py
 ```
 
 
@@ -77,13 +77,13 @@ Evaluation
 To evaluate the performance of learnt embeddings and selected features, which should be stored in `data/processed` by now, run:
 
 ```sh
-python src/results/eval_knn.py
+python eval_knn.py
 ```
 
 for KNN classification or
 
 ```sh
-python src/results/eval_alt.py
+python eval_alt.py
 ```
 
 for classification with three alternative classifiers (logistic regression, random forest, and extreme gradient boosting).
@@ -135,7 +135,7 @@ Saliency Maps
 Saliency maps of 30 input spectrograms of different instrument classes can be computed by running:
 
 ```sh
-python src/models/compute_saliency_maps.py
+python compute_saliency_maps.py
 ```
 
 The resulting maps are saved in JPEG format in the folder `data/processed/spatial_abs_grad_bottom`. We provide the 30 already computed maps in the subfolders of such directory.
