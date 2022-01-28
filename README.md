@@ -1,7 +1,7 @@
 Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription
 ============================================================================
 
-This is the code repository for the ICASSP 2022 paper (under review) 
+This is the code repository for the SMC 2022 paper (under review)
 *Deep Embeddings for Robust User-Based Amateur Vocal Percussion Transcription*
 by Alejandro Delgado, Emir Demirel, Vinod Subramanian, Charalampos Saitis, and Mark Sandler.
 
