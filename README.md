@@ -111,14 +111,14 @@ Our learnt embeddings and engineered features achieve the following performances
 | --------------------|------------------------- | -------------------- |
 | GMM-HMM             |           .725           |         .734         |
 | Timbre              |           .840           |         .835         |
-| Feature Selection   |        .827 ± .012       |      .795 ± .011     |
-| Instrument Original |        .812 ± .012       |      .774 ± .014     |
-| Instrument Reduced  |        .779 ± .019       |      .738 ± .031     |
-| Syllable Original   |        .899 ± .005       |      .874 ± .008     |
-| Syllable Reduced    |        .883 ± .005       |      .852 ± .012     |
-| Phoneme Original    |        .876 ± .014       |      .840 ± .018     |
-| Phoneme Reduced     |        .874 ± .013       |      .838 ± .019     |
-| Boxeme Original     |        .861 ± .016       |      .832 ± .018     |
+| Feature Selection   |        .827 ± .030       |      .795 ± .011     |
+| Instrument Original |        .812 ± .037       |      .774 ± .038     |
+| Instrument Reduced  |        .779 ± .034       |      .738 ± .033     |
+| Syllable Original   |        .899 ± .025       |      .874 ± .029     |
+| Syllable Reduced    |        .883 ± .030       |      .852 ± .031     |
+| Phoneme Original    |        .876 ± .028       |      .840 ± .029     |
+| Phoneme Reduced     |        .874 ± .030       |      .838 ± .032     |
+| Boxeme Original     |        .861 ± .030       |      .832 ± .031     |
 
 
 Pretrained Models
